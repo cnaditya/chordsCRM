@@ -302,7 +302,11 @@ def student_registration():
     age = st.number_input("Age", min_value=1, max_value=100)
     mobile = st.text_input("Mobile Number")
     email = st.text_input("Email Address")
-    date_of_birth = st.date_input("Date of Birth")
+    from datetime import date
+    date_of_birth = st.date_input("Date of Birth", 
+                                 min_value=date(1950, 1, 1),
+                                 max_value=date.today(),
+                                 value=date(2010, 1, 1))
     sex = st.selectbox("Gender", ["Male", "Female", "Other"])
     
     instruments = [
