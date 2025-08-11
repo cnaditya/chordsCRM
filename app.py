@@ -122,11 +122,11 @@ def login():
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
         st.markdown("### 🔐 Admin Login - Secure Access")
-        username = st.text_input("👤 Username")
-        password = st.text_input("🔒 Password", type="password", on_change=None, key="password_input")
         
         # Login form with Enter key support
         with st.form("login_form"):
+            username = st.text_input("👤 Username")
+            password = st.text_input("🔒 Password", type="password")
             login_button = st.form_submit_button("🚀 Login", use_container_width=True)
             
             if login_button:
