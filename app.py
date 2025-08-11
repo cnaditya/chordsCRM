@@ -22,7 +22,7 @@ apply_custom_css()
 # IP restriction - Office access only
 ALLOWED_IPS = [
     "192.168.0.",  # Local network range
-    "YOUR_OFFICE_IP_HERE",  # Replace with your office public IP
+    "49.204.30.164",  # Office IP
     "127.0.0.1",  # Localhost for testing
 ]
 
