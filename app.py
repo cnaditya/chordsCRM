@@ -89,53 +89,18 @@ ALLOWED_IPS = load_allowed_ips()
 
 def check_ip_access():
     """Check if user's IP is allowed"""
-    try:
-        # Get user's real IP from headers
-        import streamlit as st
-        
-        # Try multiple methods to get real IP
-        user_ip = '127.0.0.1'
-        
-        # Method 1: Streamlit headers
-        if hasattr(st, 'context') and hasattr(st.context, 'headers'):
-            headers = st.context.headers
-            user_ip = headers.get('X-Forwarded-For', headers.get('X-Real-IP', '127.0.0.1'))
-        
-        # Method 2: Session state (if available)
-        elif 'user_ip' in st.session_state:
-            user_ip = st.session_state.user_ip
-        
-        # Clean IP (take first if multiple)
-        if ',' in user_ip:
-            user_ip = user_ip.split(',')[0].strip()
-        
-        # Reload IPs from database for real-time updates
-        current_ips = load_allowed_ips()
-        
-        # Check if IP is in allowed range
-        for allowed_ip in current_ips:
-            if user_ip.startswith(allowed_ip):
-                return True
-        
-        # For debugging - temporarily allow all IPs on Streamlit Cloud
-        # Remove this after testing
-        if user_ip == '127.0.0.1':
-            return True
-            
-        return False
-    except:
-        # If can't get IP, allow access temporarily for debugging
-        return True
+    # Always allow access - IP restriction disabled for now
+    return True
 
 # Login function
 def login():
     display_header("Chords Music Academy")
     
-    # Check IP restriction first
-    if not check_ip_access():
-        st.error("🚫 Access Denied: This system can only be accessed from office locations.")
-        st.info("📍 Please contact administrator if you need access from this location.")
-        st.stop()
+    # IP restriction temporarily disabled
+    # if not check_ip_access():
+    #     st.error("🚫 Access Denied: This system can only be accessed from office locations.")
+    #     st.info("📍 Please contact administrator if you need access from this location.")
+    #     st.stop()
     
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
