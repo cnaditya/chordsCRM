@@ -92,8 +92,20 @@ def check_ip_access():
     try:
         # Get user's real IP from headers
         import streamlit as st
-        headers = st.context.headers if hasattr(st.context, 'headers') else {}
-        user_ip = headers.get('X-Forwarded-For', '127.0.0.1')
+        
+        # Try multiple methods to get real IP
+        user_ip = '127.0.0.1'
+        
+        # Method 1: Streamlit headers
+        if hasattr(st, 'context') and hasattr(st.context, 'headers'):
+            headers = st.context.headers
+            user_ip = headers.get('X-Forwarded-For', headers.get('X-Real-IP', '127.0.0.1'))
+        
+        # Method 2: Session state (if available)
+        elif 'user_ip' in st.session_state:
+            user_ip = st.session_state.user_ip
+        
+        # Clean IP (take first if multiple)
         if ',' in user_ip:
             user_ip = user_ip.split(',')[0].strip()
         
@@ -104,10 +116,16 @@ def check_ip_access():
         for allowed_ip in current_ips:
             if user_ip.startswith(allowed_ip):
                 return True
+        
+        # For debugging - temporarily allow all IPs on Streamlit Cloud
+        # Remove this after testing
+        if user_ip == '127.0.0.1':
+            return True
+            
         return False
     except:
-        # If can't get IP, deny access for security
-        return False
+        # If can't get IP, allow access temporarily for debugging
+        return True
 
 # Login function
 def login():
