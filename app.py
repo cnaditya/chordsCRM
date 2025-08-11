@@ -157,14 +157,9 @@ def check_ip_access():
 def login():
     display_header("Chords Music Academy")
     
-    # Check IP restriction
-    if not check_ip_access():
-        st.error("🚫 Access Denied: This system can only be accessed from authorized locations.")
-        if 'debug_ip' in st.session_state:
-            st.info(f"📍 Your IP: {st.session_state.debug_ip} - Contact administrator to add this IP.")
-        if 'ip_error' in st.session_state:
-            st.error(f"Debug: {st.session_state.ip_error}")
-        st.stop()
+    # IP restriction disabled - not possible on Streamlit Cloud
+    # All users appear to have the same IP (Streamlit's server IP)
+    # Security relies on login credentials instead
     
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
@@ -246,9 +241,10 @@ def dashboard():
             st.session_state.page = "due_alerts"
             st.rerun()
         
-        if st.button("🔒 IP Management", use_container_width=True):
-            st.session_state.page = "ip_management"
-            st.rerun()
+        # IP Management removed - not functional on Streamlit Cloud
+        # if st.button("🔒 IP Management", use_container_width=True):
+        #     st.session_state.page = "ip_management"
+        #     st.rerun()
 
 # Student registration
 def student_registration():
