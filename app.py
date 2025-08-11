@@ -135,11 +135,11 @@ def check_ip_access():
 def login():
     display_header("Chords Music Academy")
     
-    # Check IP restriction
-    if not check_ip_access():
-        st.error("🚫 Access Denied: This system can only be accessed from authorized locations.")
-        st.info("📍 Please contact administrator if you need access from this location.")
-        st.stop()
+    # IP restriction disabled - Streamlit Cloud IP detection issues
+    # if not check_ip_access():
+    #     st.error("🚫 Access Denied: This system can only be accessed from authorized locations.")
+    #     st.info("📍 Please contact administrator if you need access from this location.")
+    #     st.stop()
     
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
