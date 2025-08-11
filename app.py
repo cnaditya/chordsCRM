@@ -90,10 +90,22 @@ ALLOWED_IPS = load_allowed_ips()
 def check_ip_access():
     """Check if user's IP is allowed"""
     try:
-        # Get user's real IP using requests to external service
-        import requests
-        response = requests.get('https://httpbin.org/ip', timeout=5)
-        user_ip = response.json().get('origin', '127.0.0.1')
+        # Get user's real IP using multiple methods
+        user_ip = '127.0.0.1'
+        
+        # Method 1: Try external service (fast timeout)
+        try:
+            import requests
+            response = requests.get('https://httpbin.org/ip', timeout=2)
+            user_ip = response.json().get('origin', '127.0.0.1')
+        except:
+            # Method 2: Try Streamlit headers
+            try:
+                import streamlit.web.server.websocket_headers as wsh
+                headers = wsh.get_websocket_headers()
+                user_ip = headers.get('X-Forwarded-For', '127.0.0.1')
+            except:
+                user_ip = '127.0.0.1'
         
         # Clean IP (take first if multiple)
         if ',' in user_ip:
@@ -109,9 +121,14 @@ def check_ip_access():
         for allowed_ip in current_ips:
             if user_ip.startswith(allowed_ip):
                 return True
+        
+        # If IP detection failed (127.0.0.1), allow access
+        if user_ip == '127.0.0.1':
+            return True
+            
         return False
     except:
-        # If can't detect IP, allow access temporarily
+        # If anything fails, allow access
         return True
 
 # Login function
