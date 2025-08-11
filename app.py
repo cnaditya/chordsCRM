@@ -6,7 +6,7 @@ from database import init_db, add_student, mark_attendance, get_all_students, ge
 from mantra_simple import mantra_scanner as scanner
 from sms_email import send_whatsapp_reminder, send_payment_receipt_email
 from style import apply_custom_css, get_instrument_emoji, display_header, display_metric_card
-from security_module import security_settings_module
+# Security module removed
 import os
 
 # Initialize database and styling
@@ -209,11 +209,7 @@ def check_ip_access():
 def login():
     display_header("Chords Music Academy")
     
-    # Time-based and location-based access control
-    if not check_secure_access():
-        st.error("🚫 Access Denied: System access restricted.")
-        st.info("📍 Contact administrator for access.")
-        st.stop()
+    # No access restrictions - normal login only
     
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
@@ -227,8 +223,6 @@ def login():
             
             if login_button:
                 if username == "admin" and password == "admin1":
-                    # Set session start time for timeout
-                    st.session_state.session_start = datetime.now()
                     st.session_state.logged_in = True
                     st.rerun()
                 else:
@@ -297,9 +291,7 @@ def dashboard():
             st.session_state.page = "due_alerts"
             st.rerun()
         
-        if st.button("🔒 Security Settings", use_container_width=True):
-            st.session_state.page = "security"
-            st.rerun()
+        # Security settings removed
 
 # Student registration
 def student_registration():
@@ -1039,8 +1031,7 @@ def main():
             due_alerts_module()
         elif st.session_state.page == "student_list":
             student_list_module()
-        elif st.session_state.page == "security":
-            security_settings_module()
+        # Security page removed
 
 if __name__ == "__main__":
     main()
