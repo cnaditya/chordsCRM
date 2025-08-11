@@ -19,9 +19,41 @@ except:
 st.set_page_config(page_title="Chords Music Academy CRM", page_icon="🎵", layout="wide")
 apply_custom_css()
 
+# IP restriction - Office access only
+ALLOWED_IPS = [
+    "192.168.0.",  # Local network range
+    "YOUR_OFFICE_IP_HERE",  # Replace with your office public IP
+    "127.0.0.1",  # Localhost for testing
+]
+
+def check_ip_access():
+    """Check if user's IP is allowed"""
+    try:
+        # Get user's real IP from headers
+        import streamlit as st
+        headers = st.context.headers if hasattr(st.context, 'headers') else {}
+        user_ip = headers.get('X-Forwarded-For', '127.0.0.1')
+        if ',' in user_ip:
+            user_ip = user_ip.split(',')[0].strip()
+        
+        # Check if IP is in allowed range
+        for allowed_ip in ALLOWED_IPS:
+            if user_ip.startswith(allowed_ip):
+                return True
+        return False
+    except:
+        # If can't get IP, deny access for security
+        return False
+
 # Login function
 def login():
     display_header("Chords Music Academy")
+    
+    # Check IP restriction first
+    if not check_ip_access():
+        st.error("🚫 Access Denied: This system can only be accessed from office locations.")
+        st.info("📍 Please contact administrator if you need access from this location.")
+        st.stop()
     
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
