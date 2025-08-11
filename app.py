@@ -111,8 +111,8 @@ def check_ip_access():
                 return True
         return False
     except:
-        # If can't detect IP, deny access for security
-        return False
+        # If can't detect IP, allow access temporarily
+        return True
 
 # Login function
 def login():
