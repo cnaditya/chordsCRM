@@ -6,6 +6,7 @@ from database import init_db, add_student, mark_attendance, get_all_students, ge
 from mantra_simple import mantra_scanner as scanner
 from sms_email import send_whatsapp_reminder, send_payment_receipt_email
 from style import apply_custom_css, get_instrument_emoji, display_header, display_metric_card
+from ip_management import ip_management_module
 import os
 
 # Initialize database and styling
@@ -19,12 +20,71 @@ except:
 st.set_page_config(page_title="Chords Music Academy CRM", page_icon="🎵", layout="wide")
 apply_custom_css()
 
-# IP restriction - Office access only
-ALLOWED_IPS = [
-    "192.168.0.",  # Local network range
-    "49.204.30.164",  # Office IP
-    "127.0.0.1",  # Localhost for testing
-]
+# IP Management Functions
+def load_allowed_ips():
+    """Load allowed IPs from database"""
+    try:
+        conn = sqlite3.connect('chords_crm.db')
+        cursor = conn.cursor()
+        
+        # Create IP table if not exists
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS allowed_ips (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                ip_address TEXT UNIQUE,
+                description TEXT,
+                added_date TEXT
+            )
+        ''')
+        
+        # Add default IPs if table is empty
+        cursor.execute('SELECT COUNT(*) FROM allowed_ips')
+        if cursor.fetchone()[0] == 0:
+            default_ips = [
+                ('192.168.0.', 'Local network range'),
+                ('49.204.30.164', 'Office IP'),
+                ('127.0.0.1', 'Localhost')
+            ]
+            for ip, desc in default_ips:
+                cursor.execute('INSERT INTO allowed_ips (ip_address, description, added_date) VALUES (?, ?, ?)',
+                             (ip, desc, datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
+        
+        cursor.execute('SELECT ip_address FROM allowed_ips')
+        ips = [row[0] for row in cursor.fetchall()]
+        conn.commit()
+        conn.close()
+        return ips
+    except:
+        # Fallback to hardcoded IPs
+        return ["192.168.0.", "49.204.30.164", "127.0.0.1"]
+
+def add_allowed_ip(ip_address, description):
+    """Add new allowed IP"""
+    try:
+        conn = sqlite3.connect('chords_crm.db')
+        cursor = conn.cursor()
+        cursor.execute('INSERT OR REPLACE INTO allowed_ips (ip_address, description, added_date) VALUES (?, ?, ?)',
+                      (ip_address, description, datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
+        conn.commit()
+        conn.close()
+        return True
+    except:
+        return False
+
+def remove_allowed_ip(ip_address):
+    """Remove allowed IP"""
+    try:
+        conn = sqlite3.connect('chords_crm.db')
+        cursor = conn.cursor()
+        cursor.execute('DELETE FROM allowed_ips WHERE ip_address = ?', (ip_address,))
+        conn.commit()
+        conn.close()
+        return True
+    except:
+        return False
+
+# Load allowed IPs dynamically
+ALLOWED_IPS = load_allowed_ips()
 
 def check_ip_access():
     """Check if user's IP is allowed"""
@@ -36,8 +96,11 @@ def check_ip_access():
         if ',' in user_ip:
             user_ip = user_ip.split(',')[0].strip()
         
+        # Reload IPs from database for real-time updates
+        current_ips = load_allowed_ips()
+        
         # Check if IP is in allowed range
-        for allowed_ip in ALLOWED_IPS:
+        for allowed_ip in current_ips:
             if user_ip.startswith(allowed_ip):
                 return True
         return False
@@ -129,6 +192,10 @@ def dashboard():
         # Due alerts button
         if st.button("🚨 Due Alerts (Next 3 Days + Overdue)", use_container_width=True):
             st.session_state.page = "due_alerts"
+            st.rerun()
+        
+        if st.button("🔒 IP Management", use_container_width=True):
+            st.session_state.page = "ip_management"
             st.rerun()
 
 # Student registration
@@ -869,6 +936,8 @@ def main():
             due_alerts_module()
         elif st.session_state.page == "student_list":
             student_list_module()
+        elif st.session_state.page == "ip_management":
+            ip_management_module()
 
 if __name__ == "__main__":
     main()
