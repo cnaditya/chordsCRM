@@ -6,7 +6,7 @@ from database import init_db, add_student, mark_attendance, get_all_students, ge
 from mantra_simple import mantra_scanner as scanner
 from sms_email import send_whatsapp_reminder, send_payment_receipt_email
 from style import apply_custom_css, get_instrument_emoji, display_header, display_metric_card
-from ip_management import ip_management_module
+from security_module import security_settings_module
 import os
 
 # Initialize database and styling
@@ -92,6 +92,58 @@ def remove_allowed_ip(ip_address):
 # Load allowed IPs dynamically
 ALLOWED_IPS = load_allowed_ips()
 
+def check_secure_access():
+    """Multi-layer security check"""
+    from datetime import datetime, time
+    import hashlib
+    
+    # 1. Business Hours Check (9 AM to 8 PM)
+    current_time = datetime.now().time()
+    business_start = time(9, 0)  # 9:00 AM
+    business_end = time(20, 0)   # 8:00 PM
+    
+    if not (business_start <= current_time <= business_end):
+        return False
+    
+    # 2. Weekday Check (Monday to Saturday)
+    current_day = datetime.now().weekday()  # 0=Monday, 6=Sunday
+    if current_day == 6:  # Sunday
+        return False
+    
+    # 3. Device Fingerprinting (Browser-based)
+    try:
+        import streamlit.components.v1 as components
+        
+        # Get browser fingerprint
+        fingerprint_script = """
+        <script>
+        const fingerprint = navigator.userAgent + screen.width + screen.height + navigator.language;
+        const hash = btoa(fingerprint).substring(0, 16);
+        window.parent.postMessage({type: 'device_fingerprint', fingerprint: hash}, '*');
+        </script>
+        """
+        
+        components.html(fingerprint_script, height=0)
+        
+        # Check if device is authorized (stored in session)
+        if 'authorized_device' not in st.session_state:
+            # First time access - require admin approval
+            if 'pending_device' not in st.session_state:
+                st.session_state.pending_device = True
+                return False
+        
+    except:
+        pass
+    
+    # 4. Session timeout (4 hours)
+    if 'session_start' in st.session_state:
+        session_duration = datetime.now() - st.session_state.session_start
+        if session_duration.total_seconds() > 14400:  # 4 hours
+            del st.session_state.session_start
+            return False
+    
+    return True
+
 def get_user_ip():
     """Get user's real IP address"""
     try:
@@ -157,9 +209,11 @@ def check_ip_access():
 def login():
     display_header("Chords Music Academy")
     
-    # IP restriction disabled - not possible on Streamlit Cloud
-    # All users appear to have the same IP (Streamlit's server IP)
-    # Security relies on login credentials instead
+    # Time-based and location-based access control
+    if not check_secure_access():
+        st.error("🚫 Access Denied: System access restricted.")
+        st.info("📍 Contact administrator for access.")
+        st.stop()
     
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
@@ -173,6 +227,8 @@ def login():
             
             if login_button:
                 if username == "admin" and password == "admin1":
+                    # Set session start time for timeout
+                    st.session_state.session_start = datetime.now()
                     st.session_state.logged_in = True
                     st.rerun()
                 else:
@@ -241,10 +297,9 @@ def dashboard():
             st.session_state.page = "due_alerts"
             st.rerun()
         
-        # IP Management removed - not functional on Streamlit Cloud
-        # if st.button("🔒 IP Management", use_container_width=True):
-        #     st.session_state.page = "ip_management"
-        #     st.rerun()
+        if st.button("🔒 Security Settings", use_container_width=True):
+            st.session_state.page = "security"
+            st.rerun()
 
 # Student registration
 def student_registration():
@@ -984,8 +1039,8 @@ def main():
             due_alerts_module()
         elif st.session_state.page == "student_list":
             student_list_module()
-        elif st.session_state.page == "ip_management":
-            ip_management_module()
+        elif st.session_state.page == "security":
+            security_settings_module()
 
 if __name__ == "__main__":
     main()
