@@ -87,34 +87,51 @@ def remove_allowed_ip(ip_address):
 # Load allowed IPs dynamically
 ALLOWED_IPS = load_allowed_ips()
 
+def get_user_ip():
+    """Get user's real IP address"""
+    try:
+        # Try JavaScript-based IP detection first
+        import streamlit.components.v1 as components
+        
+        # Use ipify service for reliable IP detection
+        ip_script = """
+        <script>
+        fetch('https://api.ipify.org?format=json')
+        .then(response => response.json())
+        .then(data => {
+            window.parent.postMessage({type: 'user_ip', ip: data.ip}, '*');
+        })
+        .catch(() => {
+            window.parent.postMessage({type: 'user_ip', ip: '127.0.0.1'}, '*');
+        });
+        </script>
+        """
+        
+        # Execute JavaScript to get IP
+        components.html(ip_script, height=0)
+        
+        # Fallback to session state if available
+        if 'detected_ip' in st.session_state:
+            return st.session_state.detected_ip
+        
+        # Final fallback - try requests
+        import requests
+        response = requests.get('https://api.ipify.org', timeout=3)
+        return response.text.strip()
+        
+    except:
+        return '127.0.0.1'
+
 def check_ip_access():
     """Check if user's IP is allowed"""
     try:
-        # Get user's real IP using multiple methods
-        user_ip = '127.0.0.1'
+        # Get user's IP
+        user_ip = get_user_ip()
         
-        # Method 1: Try external service (fast timeout)
-        try:
-            import requests
-            response = requests.get('https://httpbin.org/ip', timeout=2)
-            user_ip = response.json().get('origin', '127.0.0.1')
-        except:
-            # Method 2: Try Streamlit headers
-            try:
-                import streamlit.web.server.websocket_headers as wsh
-                headers = wsh.get_websocket_headers()
-                user_ip = headers.get('X-Forwarded-For', '127.0.0.1')
-            except:
-                user_ip = '127.0.0.1'
-        
-        # Clean IP (take first if multiple)
-        if ',' in user_ip:
-            user_ip = user_ip.split(',')[0].strip()
-        
-        # Store in session for IP Management display
+        # Store for display
         st.session_state.current_user_ip = user_ip
         
-        # Reload IPs from database
+        # Get allowed IPs from database
         current_ips = load_allowed_ips()
         
         # Check if IP is in allowed range
@@ -122,24 +139,27 @@ def check_ip_access():
             if user_ip.startswith(allowed_ip):
                 return True
         
-        # If IP detection failed (127.0.0.1), allow access
-        if user_ip == '127.0.0.1':
-            return True
-            
+        # Debug: Show IP in error for testing
+        st.session_state.debug_ip = user_ip
         return False
-    except:
-        # If anything fails, allow access
-        return True
+        
+    except Exception as e:
+        # Store error for debugging
+        st.session_state.ip_error = str(e)
+        return False
 
 # Login function
 def login():
     display_header("Chords Music Academy")
     
-    # IP restriction disabled - Streamlit Cloud IP detection issues
-    # if not check_ip_access():
-    #     st.error("🚫 Access Denied: This system can only be accessed from authorized locations.")
-    #     st.info("📍 Please contact administrator if you need access from this location.")
-    #     st.stop()
+    # Check IP restriction
+    if not check_ip_access():
+        st.error("🚫 Access Denied: This system can only be accessed from authorized locations.")
+        if 'debug_ip' in st.session_state:
+            st.info(f"📍 Your IP: {st.session_state.debug_ip} - Contact administrator to add this IP.")
+        if 'ip_error' in st.session_state:
+            st.error(f"Debug: {st.session_state.ip_error}")
+        st.stop()
     
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
