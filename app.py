@@ -123,14 +123,18 @@ def login():
     with col2:
         st.markdown("### 🔐 Admin Login - Secure Access")
         username = st.text_input("👤 Username")
-        password = st.text_input("🔒 Password", type="password")
+        password = st.text_input("🔒 Password", type="password", on_change=None, key="password_input")
         
-        if st.button("🚀 Login", use_container_width=True):
-            if username == "admin" and password == "admin1":
-                st.session_state.logged_in = True
-                st.rerun()
-            else:
-                st.error("❌ Invalid credentials")
+        # Login form with Enter key support
+        with st.form("login_form"):
+            login_button = st.form_submit_button("🚀 Login", use_container_width=True)
+            
+            if login_button:
+                if username == "admin" and password == "admin1":
+                    st.session_state.logged_in = True
+                    st.rerun()
+                else:
+                    st.error("❌ Invalid credentials")
 
 # Main dashboard
 def dashboard():
