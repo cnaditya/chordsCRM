@@ -51,14 +51,18 @@ def load_allowed_ips():
                 cursor.execute('INSERT INTO allowed_ips (ip_address, description, added_date) VALUES (?, ?, ?)',
                              (ip, desc, datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
         
+        # Always ensure Streamlit Cloud IP is present
+        cursor.execute('INSERT OR IGNORE INTO allowed_ips (ip_address, description, added_date) VALUES (?, ?, ?)',
+                      ('35.197.92.111', 'Streamlit Cloud Server', datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
+        
         cursor.execute('SELECT ip_address FROM allowed_ips')
         ips = [row[0] for row in cursor.fetchall()]
         conn.commit()
         conn.close()
         return ips
     except:
-        # Fallback to hardcoded IPs
-        return ["192.168.0.", "49.204.30.164", "127.0.0.1"]
+        # Fallback to hardcoded IPs including Streamlit Cloud
+        return ["192.168.0.", "49.204.30.164", "49.204.28.147", "35.197.92.111", "127.0.0.1"]
 
 def add_allowed_ip(ip_address, description):
     """Add new allowed IP"""
