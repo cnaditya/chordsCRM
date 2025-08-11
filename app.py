@@ -43,6 +43,7 @@ def load_allowed_ips():
             default_ips = [
                 ('192.168.0.', 'Local network range'),
                 ('49.204.30.164', 'Office IP'),
+                ('49.204.28.147', 'Home IP'),
                 ('127.0.0.1', 'Localhost')
             ]
             for ip, desc in default_ips:
