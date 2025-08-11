@@ -113,11 +113,11 @@ def check_ip_access():
 def login():
     display_header("Chords Music Academy")
     
-    # Check IP restriction first (temporarily disabled for IP update)
-    # if not check_ip_access():
-    #     st.error("🚫 Access Denied: This system can only be accessed from office locations.")
-    #     st.info("📍 Please contact administrator if you need access from this location.")
-    #     st.stop()
+    # Check IP restriction first
+    if not check_ip_access():
+        st.error("🚫 Access Denied: This system can only be accessed from office locations.")
+        st.info("📍 Please contact administrator if you need access from this location.")
+        st.stop()
     
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
