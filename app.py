@@ -880,24 +880,83 @@ def student_list_module():
             use_container_width=True
         )
         
-        # Update database if changes made
-        if st.button("💾 Save Changes"):
-            conn = sqlite3.connect('chords_crm.db')
-            cursor = conn.cursor()
+        # Action buttons
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            if st.button("💾 Save Changes", use_container_width=True):
+                conn = sqlite3.connect('chords_crm.db')
+                cursor = conn.cursor()
+                
+                for idx, row in edited_df.iterrows():
+                    cursor.execute('''
+                        UPDATE students SET 
+                            full_name = ?, age = ?, mobile = ?, instrument = ?, 
+                            class_plan = ?, start_date = ?, expiry_date = ?
+                        WHERE student_id = ?
+                    ''', (row['Full Name'], row['Age'], row['Mobile'], row['Instrument'],
+                         row['Class Plan'], str(row['Start Date']), str(row['Expiry Date']), row['Student ID']))
+                
+                conn.commit()
+                conn.close()
+                st.success("✅ Student information updated successfully!")
+                st.rerun()
+        
+        with col2:
+            if st.button("🗑️ Delete Student", use_container_width=True, type="secondary"):
+                st.session_state.show_delete_form = True
+                st.rerun()
+        
+        # Delete student form
+        if st.session_state.get('show_delete_form', False):
+            st.markdown("---")
+            st.markdown("### ⚠️ Delete Student")
             
-            for idx, row in edited_df.iterrows():
-                cursor.execute('''
-                    UPDATE students SET 
-                        full_name = ?, age = ?, mobile = ?, instrument = ?, 
-                        class_plan = ?, start_date = ?, expiry_date = ?
-                    WHERE student_id = ?
-                ''', (row['Full Name'], row['Age'], row['Mobile'], row['Instrument'],
-                     row['Class Plan'], str(row['Start Date']), str(row['Expiry Date']), row['Student ID']))
+            # Student selection for deletion
+            student_options = [f"{row['Student ID']} - {row['Full Name']}" for _, row in df.iterrows()]
+            selected_student = st.selectbox("👥 Select Student to Delete:", student_options)
             
-            conn.commit()
-            conn.close()
-            st.success("✅ Student information updated successfully!")
-            st.rerun()
+            if selected_student:
+                student_id = selected_student.split(' - ')[0]
+                student_name = selected_student.split(' - ')[1]
+                
+                st.error(f"⚠️ You are about to delete: **{student_name} ({student_id})**")
+                st.warning("🚨 This action cannot be undone! All student data, attendance records, and payment history will be permanently deleted.")
+                
+                # Confirmation
+                confirm_text = st.text_input("Type 'DELETE' to confirm:", key="delete_confirm")
+                
+                col1, col2, col3 = st.columns(3)
+                
+                with col1:
+                    if st.button("❌ Cancel", use_container_width=True):
+                        st.session_state.show_delete_form = False
+                        st.rerun()
+                
+                with col3:
+                    if st.button("🗑️ Confirm Delete", use_container_width=True, type="primary"):
+                        if confirm_text == "DELETE":
+                            # Delete from all related tables
+                            conn = sqlite3.connect('chords_crm.db')
+                            cursor = conn.cursor()
+                            
+                            # Delete from attendance table
+                            cursor.execute('DELETE FROM attendance WHERE student_id = ?', (student_id,))
+                            
+                            # Delete from payments table
+                            cursor.execute('DELETE FROM payments WHERE student_id = ?', (student_id,))
+                            
+                            # Delete from students table
+                            cursor.execute('DELETE FROM students WHERE student_id = ?', (student_id,))
+                            
+                            conn.commit()
+                            conn.close()
+                            
+                            st.success(f"✅ Student {student_name} ({student_id}) deleted successfully!")
+                            st.session_state.show_delete_form = False
+                            st.rerun()
+                        else:
+                            st.error("Please type 'DELETE' to confirm deletion.")
     
     else:
         st.info("No students registered yet.")
