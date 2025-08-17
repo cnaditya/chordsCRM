@@ -8,6 +8,14 @@ FAST2SMS_API_KEY = "6TDScuetHNniG5F92kswhvrLJx4IAVRjpoZUb1Y83CzBl0WEd7RLDaifTQwB
 
 def send_whatsapp_reminder(mobile, student_name, plan, expiry_date):
     """Send WhatsApp reminder using Fast2SMS template"""
+    
+    # Clean mobile number - remove +91 if present
+    mobile = str(mobile).replace("+91", "").replace(" ", "").replace("-", "")
+    
+    # Validate mobile number
+    if len(mobile) != 10 or not mobile.isdigit():
+        return False, f"Invalid mobile number: {mobile}. Must be 10 digits."
+    
     url = "https://www.fast2sms.com/dev/whatsapp"
     
     # Clean and format date to dd-mm-yyyy
@@ -18,36 +26,34 @@ def send_whatsapp_reminder(mobile, student_name, plan, expiry_date):
     try:
         from datetime import datetime
         date_obj = datetime.strptime(str(expiry_date), '%Y-%m-%d')
-        expiry_date = date_obj.strftime('%d-%m-%Y')
+        expiry_date_formatted = date_obj.strftime('%d-%m-%Y')
     except:
-        pass
+        expiry_date_formatted = str(expiry_date)
     
-    # Using fees_reminder_new template (ID: 3004)
-    # Variables: Var1=student_name, Var2=plan, Var3=expiry_date
-    variables = f"{student_name}|{plan}|{expiry_date}"
+    # Simple message without template (more reliable)
+    message = f"Dear {student_name}, your {plan} plan expired on {expiry_date_formatted}. Please renew to continue classes. Contact: 7981585309 - Chords Music Academy"
     
     params = {
         "authorization": FAST2SMS_API_KEY,
-        "message_id": "3004",
+        "route": "q",
+        "message": message,
         "numbers": mobile,
-        "variables_values": variables
+        "flash": "0"
     }
     
     try:
-        response = requests.get(url, params=params)
-        print(f"DEBUG: Sending to {mobile}")
-        print(f"DEBUG: {response.status_code} - {response.text}")
+        response = requests.post(url, data=params)
         
         if response.status_code == 200:
             result = response.json()
             if result.get('return') == True:
                 return True, "WhatsApp reminder sent successfully"
             else:
-                return False, f"API Error: {result.get('message', response.text)}"
+                return False, f"API Error: {result.get('message', 'Unknown error')}"
         else:
-            return False, f"HTTP {response.status_code}: {response.text}"
+            return False, f"HTTP Error {response.status_code}: Failed to send message"
     except Exception as e:
-        return False, f"Error: {str(e)}"
+        return False, f"Network Error: {str(e)}"
 
 def send_payment_receipt_email(student_email, student_name, amount, receipt_number, plan, student_id=None, instrument=None, start_date=None, expiry_date=None, payment_method="Cash Payment"):
     """Send payment receipt via Gmail SMTP using professional template"""
