@@ -9,12 +9,25 @@ FAST2SMS_API_KEY = "6TDScuetHNniG5F92kswhvrLJx4IAVRjpoZUb1Y83CzBl0WEd7RLDaifTQwB
 def send_whatsapp_reminder(mobile, student_name, plan, expiry_date):
     """Send WhatsApp reminder using Fast2SMS template"""
     
-    # Clean mobile number - remove +91 if present
-    mobile = str(mobile).replace("+91", "").replace(" ", "").replace("-", "")
+    # Clean and format mobile number for international support
+    mobile = str(mobile).replace(" ", "").replace("-", "").replace("(", "").replace(")", "")
     
-    # Validate mobile number
-    if len(mobile) != 10 or not mobile.isdigit():
-        return False, f"Invalid mobile number: {mobile}. Must be 10 digits."
+    # Add country code if not present
+    if mobile.startswith("+"):
+        # Already has country code, remove + for API
+        mobile = mobile[1:]
+    elif mobile.startswith("91") and len(mobile) == 12:
+        # Already has 91 prefix
+        pass
+    elif len(mobile) == 10 and mobile.isdigit():
+        # Indian number without country code, add 91
+        mobile = "91" + mobile
+    elif not mobile.isdigit():
+        return False, f"Invalid mobile number format: {mobile}"
+    
+    # Validate final format
+    if len(mobile) < 10 or len(mobile) > 15 or not mobile.isdigit():
+        return False, f"Invalid mobile number: {mobile}. Must be 10-15 digits with country code."
     
     url = "https://www.fast2sms.com/dev/whatsapp"
     
