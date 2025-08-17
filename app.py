@@ -230,68 +230,93 @@ def login():
 
 # Main dashboard
 def dashboard():
-    display_header("Executive Dashboard")
+    display_header("Executive Dashboard", "Comprehensive Student Management System")
     
     # Get stats
     total, active, expired, today_att = get_dashboard_stats()
     
     # Key Metrics Section
-    st.markdown("<div class='nav-title'>Key Performance Indicators</div>", unsafe_allow_html=True)
-    col1, col2, col3, col4 = st.columns(4, gap="large")
+    st.markdown('<div class="metrics-grid">', unsafe_allow_html=True)
+    col1, col2, col3, col4 = st.columns(4)
     with col1:
-        display_metric_card("Total Students", total, "👥")
+        display_metric_card("Total Students", total, "👥", "#3b82f6")
     with col2:
-        display_metric_card("Active Students", active, "✅")
+        display_metric_card("Active Students", active, "✅", "#10b981")
     with col3:
-        display_metric_card("Expired Plans", expired, "⚠️")
+        display_metric_card("Expired Plans", expired, "⚠️", "#f59e0b")
     with col4:
-        display_metric_card("Today's Attendance", today_att, "📅")
+        display_metric_card("Today's Attendance", today_att, "📅", "#8b5cf6")
+    st.markdown('</div>', unsafe_allow_html=True)
     
-    # Quick Actions Section
-    st.markdown("""
-    <div class="nav-section">
-        <div class="nav-title">Management Console</div>
-    </div>
-    """, unsafe_allow_html=True)
+    # Management Console
+    display_section_header("Management Console")
     
-    col1, col2, col3 = st.columns(3, gap="large")
+    # Navigation Grid
+    st.markdown('<div class="dashboard-grid">', unsafe_allow_html=True)
+    
+    col1, col2, col3 = st.columns(3)
+    
     with col1:
+        st.markdown("""
+        <div class="nav-card">
+            <div class="nav-card-icon">👥</div>
+            <div class="nav-card-title">Student Management</div>
+            <div class="nav-card-desc">Register new students and manage existing records</div>
+        </div>
+        """, unsafe_allow_html=True)
+        
         if st.button("📝 Student Registration", use_container_width=True):
             st.session_state.page = "registration"
-            st.rerun()
-        if st.button("🔒 Biometric Enrollment", use_container_width=True):
-            st.session_state.page = "biometric"
-            st.rerun()
-    with col2:
-        if st.button("✅ Attendance Management", use_container_width=True):
-            st.session_state.page = "attendance"
-            st.rerun()
-        if st.button("💰 Payment Processing", use_container_width=True):
-            st.session_state.page = "payments"
-            st.rerun()
-    with col3:
-        if st.button("📊 Analytics & Reports", use_container_width=True):
-            st.session_state.page = "reports"
             st.rerun()
         if st.button("👥 Student List & Edit", use_container_width=True):
             st.session_state.page = "student_list"
             st.rerun()
+    
+    with col2:
+        st.markdown("""
+        <div class="nav-card">
+            <div class="nav-card-icon">📈</div>
+            <div class="nav-card-title">Operations</div>
+            <div class="nav-card-desc">Attendance tracking and biometric enrollment</div>
+        </div>
+        """, unsafe_allow_html=True)
         
-        # Show overdue alert if any
-        if expired > 0:
-            st.markdown(f"""
-            <div class="overdue-alert">
-                <strong>⚠️ {expired} Overdue Plans</strong><br>
-                Immediate attention required
-            </div>
-            """, unsafe_allow_html=True)
+        if st.button("✅ Attendance Management", use_container_width=True):
+            st.session_state.page = "attendance"
+            st.rerun()
+        if st.button("🔒 Biometric Enrollment", use_container_width=True):
+            st.session_state.page = "biometric"
+            st.rerun()
+    
+    with col3:
+        st.markdown("""
+        <div class="nav-card">
+            <div class="nav-card-icon">💰</div>
+            <div class="nav-card-title">Financial</div>
+            <div class="nav-card-desc">Payment processing and financial reports</div>
+        </div>
+        """, unsafe_allow_html=True)
         
-        # Due alerts button
-        if st.button("🚨 Due Alerts (Next 3 Days + Overdue)", use_container_width=True):
+        if st.button("💰 Payment Processing", use_container_width=True):
+            st.session_state.page = "payments"
+            st.rerun()
+        if st.button("📊 Analytics & Reports", use_container_width=True):
+            st.session_state.page = "reports"
+            st.rerun()
+    
+    st.markdown('</div>', unsafe_allow_html=True)
+    
+    # Alerts Section
+    if expired > 0:
+        st.markdown("""
+        <div class="alert-warning">
+            <strong>⚠️ Attention Required:</strong> {expired} students have expired payment plans that need immediate attention.
+        </div>
+        """.format(expired=expired), unsafe_allow_html=True)
+        
+        if st.button("🚨 View Due Alerts & Take Action", use_container_width=True, type="primary"):
             st.session_state.page = "due_alerts"
             st.rerun()
-        
-        # Security settings removed
 
 # Student registration
 def student_registration():
