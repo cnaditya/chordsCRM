@@ -30,15 +30,15 @@ def send_whatsapp_reminder(mobile, student_name, plan, expiry_date):
     except:
         expiry_date_formatted = str(expiry_date)
     
-    # Using Fast2SMS template 3004 (fees_reminder_new)
-    # Template: Dear {Var1}, this is a reminder from Chords Music Academy. Your fee for {Var2} classes is due on {Var3}...
+    # Using Fast2SMS template 3004 (fees_reminder_new) - MARKETING category
     variables = f"{student_name}|{plan}|{expiry_date_formatted}"
     
     params = {
         "authorization": FAST2SMS_API_KEY,
         "message_id": "3004",
         "numbers": mobile,
-        "variables_values": variables
+        "variables_values": variables,
+        "sender_id": "CHORDS"
     }
     
     try:
