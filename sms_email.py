@@ -42,16 +42,28 @@ def send_whatsapp_reminder(mobile, student_name, plan, expiry_date):
     }
     
     try:
-        response = requests.get(url, params=params)
+        response = requests.get(url, params=params, timeout=10)
+        
+        # Debug logging
+        print(f"DEBUG: URL: {url}")
+        print(f"DEBUG: Params: {params}")
+        print(f"DEBUG: Status: {response.status_code}")
+        print(f"DEBUG: Response: {response.text}")
         
         if response.status_code == 200:
-            result = response.json()
-            if result.get('return') == True:
-                return True, "WhatsApp reminder sent successfully"
-            else:
-                return False, f"API Error: {result.get('message', 'Unknown error')}"
+            try:
+                result = response.json()
+                print(f"DEBUG: JSON Result: {result}")
+                
+                if result.get('return') == True:
+                    return True, "WhatsApp reminder sent successfully"
+                else:
+                    error_msg = result.get('message', result.get('error', 'Unknown API error'))
+                    return False, f"API Error: {error_msg}"
+            except:
+                return False, f"Invalid JSON response: {response.text}"
         else:
-            return False, f"HTTP Error {response.status_code}: Failed to send message"
+            return False, f"HTTP {response.status_code}: {response.text}"
     except Exception as e:
         return False, f"Network Error: {str(e)}"
 
