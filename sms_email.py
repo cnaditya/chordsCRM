@@ -30,19 +30,19 @@ def send_whatsapp_reminder(mobile, student_name, plan, expiry_date):
     except:
         expiry_date_formatted = str(expiry_date)
     
-    # Simple message without template (more reliable)
-    message = f"Dear {student_name}, your {plan} plan expired on {expiry_date_formatted}. Please renew to continue classes. Contact: 7981585309 - Chords Music Academy"
+    # Using your Fast2SMS template (fees_reminder_new - ID: 3004)
+    # Template: Dear {#var#}, your {#var#} plan expired on {#var#}. Please renew to continue classes. Contact: 7981585309 - Chords Music Academy
+    variables = f"{student_name}|{plan}|{expiry_date_formatted}"
     
     params = {
         "authorization": FAST2SMS_API_KEY,
-        "route": "q",
-        "message": message,
+        "message_id": "3004",
         "numbers": mobile,
-        "flash": "0"
+        "variables_values": variables
     }
     
     try:
-        response = requests.post(url, data=params)
+        response = requests.get(url, params=params)
         
         if response.status_code == 200:
             result = response.json()
