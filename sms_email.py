@@ -30,8 +30,8 @@ def send_whatsapp_reminder(mobile, student_name, plan, expiry_date):
     except:
         expiry_date_formatted = str(expiry_date)
     
-    # Using your Fast2SMS template (fees_reminder_new - ID: 3004)
-    # Template: Dear {#var#}, your {#var#} plan expired on {#var#}. Please renew to continue classes. Contact: 7981585309 - Chords Music Academy
+    # Using Fast2SMS template 3004 (fees_reminder_new)
+    # Template: Dear {Var1}, this is a reminder from Chords Music Academy. Your fee for {Var2} classes is due on {Var3}...
     variables = f"{student_name}|{plan}|{expiry_date_formatted}"
     
     params = {

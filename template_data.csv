@@ -1,0 +1,18 @@
+message_id,template_name,number,category,status,variable_count,variable_values,media_requirements,api_url,message_content
+2968,offer_template,Chords Music Academy (+917981585309),MARKETING,APPROVED,3.0,Var1|Var2|Var3,No media required,https://www.fast2sms.com/dev/whatsapp?authorization=<YOUR_API_KEY>&message_id=2968&numbers=<MOBILE_NUMBER>&variables_values=Var1|Var2|Var3,"BODY: Offer of the day.
+
+Buy {Var1} & get {Var2} FREE.
+
+Visit: {Var3}"
+2969,payment_completed,Chords Music Academy (+917981585309),UTILITY,APPROVED,1.0,Var1,No media required,https://www.fast2sms.com/dev/whatsapp?authorization=<YOUR_API_KEY>&message_id=2969&numbers=<MOBILE_NUMBER>&variables_values=Var1,"BODY: Dear user,
+Your last payment completed successfully
+
+amount: {Var1}"
+2970,otp_template,Chords Music Academy (+917981585309),AUTHENTICATION,APPROVED,1.0,Var1,No media required,https://www.fast2sms.com/dev/whatsapp?authorization=<YOUR_API_KEY>&message_id=2970&numbers=<MOBILE_NUMBER>&variables_values=Var1,"BODY: *{Var1}* is your verification code. For your security, do not share this code."
+2990,fees_reminder,Chords Music Academy (+917981585309),UTILITY,APPROVED,,,No media required,https://www.fast2sms.com/dev/whatsapp?authorization=<YOUR_API_KEY>&message_id=2990&numbers=<MOBILE_NUMBER>,"BODY: Dear {#var#}, this is a reminder to pay the fee for your {#var#} music classes. Kindly complete the payment before {#var#}. | FOOTER: Chords Music Academy | BUTTON: Call Now (PHONE_NUMBER) - +917981585309"
+3004,fees_reminder_new,Chords Music Academy (+917981585309),MARKETING,APPROVED,3.0,Var1|Var2|Var3,No media required,https://www.fast2sms.com/dev/whatsapp?authorization=<YOUR_API_KEY>&message_id=3004&numbers=<MOBILE_NUMBER>&variables_values=Var1|Var2|Var3,"BODY: Dear {Var1}, this is a reminder from Chords Music Academy.
+
+Your fee for {Var2} classes is due on {Var3}. Pay before the due date and get exclusive offers on your next enrollment.
+
+🎶 Let the music continue without interruption!  
+📞 Contact us at +91 7981585309 | BUTTON: Call (PHONE_NUMBER) - +917981585309"
