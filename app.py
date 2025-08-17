@@ -5,7 +5,7 @@ import sqlite3
 from database import init_db, add_student, mark_attendance, get_all_students, get_dashboard_stats
 from mantra_simple import mantra_scanner as scanner
 from sms_email import send_whatsapp_reminder, send_payment_receipt_email
-from style import apply_custom_css, get_instrument_emoji, display_header, display_metric_card
+from style import apply_custom_css, get_instrument_emoji, display_header, display_metric_card, display_section_header
 # Security module removed
 import os
 
