@@ -17,28 +17,7 @@ def apply_custom_css():
         position: relative;
     }
     
-    .stApp::before {
-        content: '🎵 🎶 🎼 🎹 🎸 🥁 🎻 🎤 🎺 🎷 🪈 🎧';
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        font-size: 2rem;
-        opacity: 0.02;
-        pointer-events: none;
-        z-index: -1;
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: space-around;
-        align-items: center;
-        animation: float 20s ease-in-out infinite;
-    }
-    
-    @keyframes float {
-        0%, 100% { transform: translateY(0px) rotate(0deg); }
-        50% { transform: translateY(-10px) rotate(2deg); }
-    }
+    /* Removed problematic floating symbols */
     
     /* Enterprise Header */
     .enterprise-header {
