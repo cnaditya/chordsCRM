@@ -251,17 +251,17 @@ def dashboard():
     # Management Console
     display_section_header("Management Console")
     
-    # Navigation Grid
-    st.markdown('<div class="dashboard-grid">', unsafe_allow_html=True)
-    
-    col1, col2, col3 = st.columns(3)
+    # Navigation Grid - Fixed alignment
+    col1, col2, col3 = st.columns(3, gap="large")
     
     with col1:
         st.markdown("""
-        <div class="nav-card">
-            <div class="nav-card-icon">👥</div>
-            <div class="nav-card-title">Student Management</div>
-            <div class="nav-card-desc">Register new students and manage existing records</div>
+        <div class="nav-card" style="height: 180px; display: flex; flex-direction: column; justify-content: space-between;">
+            <div>
+                <div class="nav-card-icon">👥</div>
+                <div class="nav-card-title">Student Management</div>
+                <div class="nav-card-desc">Register new students and manage existing records</div>
+            </div>
         </div>
         """, unsafe_allow_html=True)
         
@@ -274,10 +274,12 @@ def dashboard():
     
     with col2:
         st.markdown("""
-        <div class="nav-card">
-            <div class="nav-card-icon">📈</div>
-            <div class="nav-card-title">Operations</div>
-            <div class="nav-card-desc">Attendance tracking and biometric enrollment</div>
+        <div class="nav-card" style="height: 180px; display: flex; flex-direction: column; justify-content: space-between;">
+            <div>
+                <div class="nav-card-icon">📈</div>
+                <div class="nav-card-title">Operations Management</div>
+                <div class="nav-card-desc">Attendance tracking and biometric enrollment</div>
+            </div>
         </div>
         """, unsafe_allow_html=True)
         
@@ -290,10 +292,12 @@ def dashboard():
     
     with col3:
         st.markdown("""
-        <div class="nav-card">
-            <div class="nav-card-icon">💰</div>
-            <div class="nav-card-title">Financial</div>
-            <div class="nav-card-desc">Payment processing and financial reports</div>
+        <div class="nav-card" style="height: 180px; display: flex; flex-direction: column; justify-content: space-between;">
+            <div>
+                <div class="nav-card-icon">💰</div>
+                <div class="nav-card-title">Financial Management</div>
+                <div class="nav-card-desc">Payment processing and comprehensive financial reports</div>
+            </div>
         </div>
         """, unsafe_allow_html=True)
         
@@ -303,8 +307,6 @@ def dashboard():
         if st.button("📊 Analytics & Reports", use_container_width=True):
             st.session_state.page = "reports"
             st.rerun()
-    
-    st.markdown('</div>', unsafe_allow_html=True)
     
     # Alerts Section
     if expired > 0:
