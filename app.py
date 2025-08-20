@@ -230,7 +230,7 @@ def login():
 
 # Main dashboard
 def dashboard():
-    display_header("Executive Dashboard", "Comprehensive Student Management System")
+    display_header("Chords Music Academy", "Comprehensive Student Management System")
     
     # Get stats
     total, active, expired, today_att = get_dashboard_stats()
