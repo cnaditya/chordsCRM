@@ -343,19 +343,19 @@ def student_registration():
     # Submit button
     if st.button("Register Student", type="primary"):
         if full_name and mobile and email:
-                student_id = add_student(full_name, age, mobile, email, 
-                                       date_of_birth.strftime('%Y-%m-%d'), sex, instrument,
-                                       "1 Month - 8", start_date.strftime('%Y-%m-%d'))  # Default plan
-                
-                st.markdown(f"""
-                <div class="success-msg">
-                    <h3>🎉 Registration Successful!</h3>
-                    <p><strong>Student ID:</strong> {student_id}</p>
-                    <p>📱 Next: Proceed to Biometric Enrollment</p>
-                </div>
-                """, unsafe_allow_html=True)
-            else:
-                st.error("Please fill all required fields (Name, Mobile, Email)")
+            student_id = add_student(full_name, age, mobile, email, 
+                                   date_of_birth.strftime('%Y-%m-%d'), sex, instrument,
+                                   "1 Month - 8", start_date.strftime('%Y-%m-%d'))  # Default plan
+            
+            st.markdown(f"""
+            <div class="success-msg">
+                <h3>🎉 Registration Successful!</h3>
+                <p><strong>Student ID:</strong> {student_id}</p>
+                <p>📱 Next: Proceed to Biometric Enrollment</p>
+            </div>
+            """, unsafe_allow_html=True)
+        else:
+            st.error("Please fill all required fields (Name, Mobile, Email)")
     
     if st.button("← Back to Dashboard"):
         st.session_state.page = "dashboard"
