@@ -256,12 +256,10 @@ def dashboard():
     
     with col1:
         st.markdown("""
-        <div class="nav-card" style="height: 180px; display: flex; flex-direction: column; justify-content: space-between;">
-            <div>
-                <div class="nav-card-icon">👥</div>
-                <div class="nav-card-title">Student Management</div>
-                <div class="nav-card-desc">Register new students and manage existing records</div>
-            </div>
+        <div class="nav-card" style="height: 220px; padding: 1.5rem;">
+            <div class="nav-card-icon">👥</div>
+            <div class="nav-card-title">Student Management</div>
+            <div class="nav-card-desc">Register new students and manage existing records</div>
         </div>
         """, unsafe_allow_html=True)
         
@@ -274,12 +272,10 @@ def dashboard():
     
     with col2:
         st.markdown("""
-        <div class="nav-card" style="height: 180px; display: flex; flex-direction: column; justify-content: space-between;">
-            <div>
-                <div class="nav-card-icon">📈</div>
-                <div class="nav-card-title">Operations Management</div>
-                <div class="nav-card-desc">Attendance tracking and biometric enrollment</div>
-            </div>
+        <div class="nav-card" style="height: 220px; padding: 1.5rem;">
+            <div class="nav-card-icon">📈</div>
+            <div class="nav-card-title">Operations Management</div>
+            <div class="nav-card-desc">Attendance tracking and biometric enrollment</div>
         </div>
         """, unsafe_allow_html=True)
         
@@ -292,12 +288,10 @@ def dashboard():
     
     with col3:
         st.markdown("""
-        <div class="nav-card" style="height: 180px; display: flex; flex-direction: column; justify-content: space-between;">
-            <div>
-                <div class="nav-card-icon">💰</div>
-                <div class="nav-card-title">Financial Management</div>
-                <div class="nav-card-desc">Payment processing and comprehensive financial reports</div>
-            </div>
+        <div class="nav-card" style="height: 220px; padding: 1.5rem;">
+            <div class="nav-card-icon">💰</div>
+            <div class="nav-card-title">Financial Management</div>
+            <div class="nav-card-desc">Payment processing and financial reports</div>
         </div>
         """, unsafe_allow_html=True)
         
