@@ -6,10 +6,38 @@ def apply_custom_css():
     /* Import Enterprise Fonts */
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
     
-    /* Global App Styling */
+    /* Global App Styling with Music Background */
     .stApp {
         font-family: 'Inter', sans-serif;
         background: #f8fafc;
+        background-image: 
+            radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.05) 0%, transparent 50%),
+            radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.05) 0%, transparent 50%),
+            radial-gradient(circle at 40% 40%, rgba(120, 219, 255, 0.05) 0%, transparent 50%);
+        position: relative;
+    }
+    
+    .stApp::before {
+        content: '🎵 🎶 🎼 🎹 🎸 🥁 🎻 🎤 🎺 🎷 🪈 🎧';
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        font-size: 2rem;
+        opacity: 0.02;
+        pointer-events: none;
+        z-index: -1;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-around;
+        align-items: center;
+        animation: float 20s ease-in-out infinite;
+    }
+    
+    @keyframes float {
+        0%, 100% { transform: translateY(0px) rotate(0deg); }
+        50% { transform: translateY(-10px) rotate(2deg); }
     }
     
     /* Enterprise Header */
@@ -48,8 +76,9 @@ def apply_custom_css():
     
     /* Navigation Cards */
     .nav-card {
-        background: white;
-        border: 1px solid #e2e8f0;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(226, 232, 240, 0.8);
         border-radius: 16px;
         padding: 2rem;
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -113,8 +142,9 @@ def apply_custom_css():
     }
     
     .metric-card {
-        background: white;
-        border: 1px solid #e2e8f0;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(226, 232, 240, 0.8);
         border-radius: 16px;
         padding: 2rem;
         text-align: center;
@@ -286,7 +316,8 @@ def apply_custom_css():
     
     /* Section Headers */
     .section-header {
-        background: white;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
         padding: 1.5rem 2rem;
         border-radius: 12px;
         margin: 2rem 0 1rem 0;
