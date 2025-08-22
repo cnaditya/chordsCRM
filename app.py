@@ -820,15 +820,26 @@ def payment_module():
                         # Show current package (read-only)
                         st.text_input("📅 Current Package", value=student['Class Plan'], disabled=True, key=f"current_plan_{student['Student ID']}")
                         
-                        # Next payment due date (editable for installments)
-                        from datetime import timedelta
-                        default_next_due = datetime.now() + timedelta(days=30)  # Default 1 month
-                        next_payment_due = st.date_input(
-                            "🗓️ Next Payment Due Date", 
-                            value=default_next_due.date(),
-                            help="Set when the next installment is due",
-                            key=f"next_due_{student['Student ID']}"
+                        # Payment status selection
+                        payment_status = st.radio(
+                            "💰 Payment Status",
+                            ["Installment Payment", "Fully Paid - No Dues"],
+                            key=f"status_{student['Student ID']}"
                         )
+                        
+                        if payment_status == "Installment Payment":
+                            # Next payment due date (editable for installments)
+                            from datetime import timedelta
+                            default_next_due = datetime.now() + timedelta(days=30)  # Default 1 month
+                            next_payment_due = st.date_input(
+                                "🗓️ Next Payment Due Date", 
+                                value=default_next_due.date(),
+                                help="Set when the next installment is due",
+                                key=f"next_due_{student['Student ID']}"
+                            )
+                        else:
+                            next_payment_due = None
+                            st.success("🎉 Marking as Fully Paid - No future dues!")
                         
                         # Payment notes
                         payment_notes = st.text_area(
@@ -862,11 +873,12 @@ def payment_module():
                             conn = sqlite3.connect('chords_crm.db')
                             cursor = conn.cursor()
                             # Record payment with installment details
+                            next_due_str = next_payment_due.strftime('%Y-%m-%d') if next_payment_due else None
                             cursor.execute('''
                                 INSERT INTO payments (student_id, amount, payment_date, receipt_number, notes, next_due_date)
                                 VALUES (?, ?, ?, ?, ?, ?)
                             ''', (student['Student ID'], amount, datetime.now().strftime('%Y-%m-%d'), 
-                                 receipt_no, payment_notes, next_payment_due.strftime('%Y-%m-%d')))
+                                 receipt_no, payment_notes, next_due_str))
                             
                             # Payment already inserted above
                             
@@ -875,12 +887,13 @@ def payment_module():
                             
                             # Send receipt
                             with st.spinner("📧 Sending receipt..."):
+                                next_due_str = next_payment_due.strftime('%Y-%m-%d') if next_payment_due else None
                                 success, message = send_payment_receipt_email(
                                     student_email, student['Full Name'], 
                                     amount, receipt_no, student['Class Plan'],
                                     student['Student ID'], student['Instrument'],
                                     str(student['Start Date']).split(' ')[0], str(student['Expiry Date']).split(' ')[0],
-                                    payment_method, next_payment_due.strftime('%Y-%m-%d')
+                                    payment_method, next_due_str
                                 )
                                 if success:
                                     st.success("✅ Payment processed successfully! Receipt sent via email.")
