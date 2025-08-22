@@ -877,7 +877,7 @@ def student_list_module():
         
         # Search and filter section
         st.markdown("### 🔍 Find Student")
-        col1, col2, col3 = st.columns(3)
+        col1, col2, col3, col4 = st.columns(4)
         
         with col1:
             search_term = st.text_input("🔍 Search by Name or ID", placeholder="Enter student name or ID")
@@ -890,59 +890,72 @@ def student_list_module():
             package_filter = st.selectbox("📦 Filter by Package", 
                                         ['All Packages'] + list(df['Class Plan'].unique()))
         
-        # Apply filters
-        filtered_df = df.copy()
-        if search_term:
-            filtered_df = filtered_df[filtered_df['Full Name'].str.contains(search_term, case=False, na=False) | 
-                                    filtered_df['Student ID'].str.contains(search_term, case=False, na=False)]
+        with col4:
+            show_all = st.button("📊 Show All Students", use_container_width=True)
         
-        if instrument_filter != 'All Instruments':
-            filtered_df = filtered_df[filtered_df['Instrument'] == instrument_filter]
+        # Determine if we should show results
+        should_show_results = bool(search_term) or instrument_filter != 'All Instruments' or package_filter != 'All Packages' or show_all
         
-        if package_filter != 'All Packages':
-            filtered_df = filtered_df[filtered_df['Class Plan'] == package_filter]
-        
-        # Pagination setup
-        students_per_page = 10
-        total_students = len(filtered_df)
-        total_pages = (total_students - 1) // students_per_page + 1 if total_students > 0 else 1
-        
-        # Display results count and pagination info
-        if search_term or instrument_filter != 'All Instruments' or package_filter != 'All Packages':
-            st.info(f"📊 Found {total_students} student(s) matching your criteria")
+        if should_show_results:
+            # Apply filters
+            filtered_df = df.copy()
+            if search_term:
+                filtered_df = filtered_df[filtered_df['Full Name'].str.contains(search_term, case=False, na=False) | 
+                                        filtered_df['Student ID'].str.contains(search_term, case=False, na=False)]
+            
+            if instrument_filter != 'All Instruments':
+                filtered_df = filtered_df[filtered_df['Instrument'] == instrument_filter]
+            
+            if package_filter != 'All Packages':
+                filtered_df = filtered_df[filtered_df['Class Plan'] == package_filter]
         else:
-            st.info(f"📊 Total {total_students} students")
+            # Show nothing by default
+            filtered_df = df.iloc[0:0]  # Empty dataframe
         
-        # Pagination controls
-        if total_students > students_per_page:
-            col1, col2, col3 = st.columns([1, 2, 1])
+        if not should_show_results:
+            st.info("🔍 Enter search criteria or click 'Show All Students' to view records")
+        else:
+            # Pagination setup
+            students_per_page = 10
+            total_students = len(filtered_df)
+            total_pages = (total_students - 1) // students_per_page + 1 if total_students > 0 else 1
             
-            with col1:
-                if 'current_page' not in st.session_state:
-                    st.session_state.current_page = 1
+            # Display results count and pagination info
+            if search_term or instrument_filter != 'All Instruments' or package_filter != 'All Packages':
+                st.info(f"📊 Found {total_students} student(s) matching your criteria")
+            else:
+                st.info(f"📊 Total {total_students} students")
+        
+            # Pagination controls
+            if total_students > students_per_page:
+                col1, col2, col3 = st.columns([1, 2, 1])
                 
-                if st.button("⬅️ Previous", disabled=st.session_state.current_page <= 1):
-                    st.session_state.current_page -= 1
-                    st.rerun()
+                with col1:
+                    if 'current_page' not in st.session_state:
+                        st.session_state.current_page = 1
+                    
+                    if st.button("⬅️ Previous", disabled=st.session_state.current_page <= 1):
+                        st.session_state.current_page -= 1
+                        st.rerun()
+                
+                with col2:
+                    st.markdown(f"<div style='text-align: center; padding: 0.5rem;'><strong>Page {st.session_state.current_page} of {total_pages}</strong></div>", unsafe_allow_html=True)
+                
+                with col3:
+                    if st.button("Next ➡️", disabled=st.session_state.current_page >= total_pages):
+                        st.session_state.current_page += 1
+                        st.rerun()
             
-            with col2:
-                st.markdown(f"<div style='text-align: center; padding: 0.5rem;'><strong>Page {st.session_state.current_page} of {total_pages}</strong></div>", unsafe_allow_html=True)
+            st.divider()
             
-            with col3:
-                if st.button("Next ➡️", disabled=st.session_state.current_page >= total_pages):
-                    st.session_state.current_page += 1
-                    st.rerun()
-        
-        st.divider()
-        
-        # Display students as cards with pagination
-        if not filtered_df.empty:
-            # Calculate pagination
-            start_idx = (st.session_state.get('current_page', 1) - 1) * students_per_page
-            end_idx = start_idx + students_per_page
-            page_df = filtered_df.iloc[start_idx:end_idx]
-            
-            st.markdown(f"### 👥 Student Records (Showing {len(page_df)} of {total_students})")
+            # Display students as cards with pagination
+            if not filtered_df.empty:
+                # Calculate pagination
+                start_idx = (st.session_state.get('current_page', 1) - 1) * students_per_page
+                end_idx = start_idx + students_per_page
+                page_df = filtered_df.iloc[start_idx:end_idx]
+                
+                st.markdown(f"### 👥 Student Records (Showing {len(page_df)} of {total_students})")
             
             for _, student in page_df.iterrows():
                 emoji = get_instrument_emoji(student['Instrument'])
@@ -1082,8 +1095,8 @@ def student_list_module():
                                 st.success(f"✅ {student['Full Name']} deleted successfully!")
                                 del st.session_state[f"confirm_delete_{student['Student ID']}"]
                                 st.rerun()
-        else:
-            st.warning("🔍 No students found matching your search criteria.")
+            else:
+                st.warning("🔍 No students found matching your search criteria.")
 
     
     else:
