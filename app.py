@@ -755,26 +755,12 @@ def payment_module():
                         )
                     
                     with pcol2:
-                        # Payment plan selection
-                        payment_plan = st.selectbox(
-                            "📅 New Payment Plan",
-                            ["1 Month - 8", "3 Month - 24", "6 Month - 48", "12 Month - 96"],
-                            index=0,
-                            key=f"plan_{student['Student ID']}"
-                        )
+                        # Show current package (read-only)
+                        st.text_input("📅 Current Package", value=student['Class Plan'], disabled=True, key=f"current_plan_{student['Student ID']}")
                         
-                        # Calculate next due date (real-time update)
-                        from datetime import timedelta
-                        current_expiry = datetime.strptime(str(student['Expiry Date']).split(' ')[0], '%Y-%m-%d')
-                        package_days = {"1 Month - 8": 30, "3 Month - 24": 90, "6 Month - 48": 180, "12 Month - 96": 365}
-                        plan_days = package_days[payment_plan]
-                        calculated_next_due = current_expiry + timedelta(days=plan_days)
-                        
-                        next_due_date = st.date_input(
-                            "🗓️ Next Due Date (Auto-calculated, Editable)", 
-                            value=calculated_next_due.date(),
-                            key=f"due_{student['Student ID']}"
-                        )
+                        # Show current expiry date (read-only)
+                        current_expiry_formatted = datetime.strptime(str(student['Expiry Date']).split(' ')[0], '%Y-%m-%d').strftime('%d-%m-%Y')
+                        st.text_input("🗓️ Current Expiry Date", value=current_expiry_formatted, disabled=True, key=f"current_exp_{student['Student ID']}")
                     
                     # Receipt and calculation info
                     st.markdown("---")
@@ -792,7 +778,7 @@ def payment_module():
                     with rcol1:
                         st.info(f"📄 **Receipt:** {receipt_no}")
                     with rcol2:
-                        st.info(f"📅 **Plan:** {payment_plan.split(' - ')[0]} ({plan_days} days)")
+                        st.info(f"📅 **Package:** {student['Class Plan']}")
                     
                     # Submit button
                     if st.button("✅ Process Payment", use_container_width=True, type="primary", key=f"submit_{student['Student ID']}"):
@@ -800,8 +786,8 @@ def payment_module():
                             # Update database
                             conn = sqlite3.connect('chords_crm.db')
                             cursor = conn.cursor()
-                            cursor.execute("UPDATE students SET expiry_date = ?, class_plan = ? WHERE student_id = ?", 
-                                         (next_due_date.strftime('%Y-%m-%d'), payment_plan, student['Student ID']))
+                            # Only record payment, don't change student package
+                            # Package changes should be done in Student Edit page
                             
                             cursor.execute('''
                                 INSERT INTO payments (student_id, amount, payment_date, receipt_number)
@@ -815,9 +801,9 @@ def payment_module():
                             with st.spinner("📧 Sending receipt..."):
                                 success, message = send_payment_receipt_email(
                                     student_email, student['Full Name'], 
-                                    amount, receipt_no, payment_plan,
+                                    amount, receipt_no, student['Class Plan'],
                                     student['Student ID'], student['Instrument'],
-                                    str(student['Start Date']).split(' ')[0], next_due_date.strftime('%Y-%m-%d'),
+                                    str(student['Start Date']).split(' ')[0], str(student['Expiry Date']).split(' ')[0],
                                     payment_method
                                 )
                                 if success:
