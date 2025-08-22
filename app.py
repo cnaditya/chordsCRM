@@ -880,7 +880,7 @@ def payment_module():
                                     amount, receipt_no, student['Class Plan'],
                                     student['Student ID'], student['Instrument'],
                                     str(student['Start Date']).split(' ')[0], str(student['Expiry Date']).split(' ')[0],
-                                    payment_method
+                                    payment_method, next_payment_due.strftime('%Y-%m-%d')
                                 )
                                 if success:
                                     st.success("✅ Payment processed successfully! Receipt sent via email.")

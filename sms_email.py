@@ -80,7 +80,7 @@ def send_whatsapp_reminder(mobile, student_name, plan, expiry_date):
     except Exception as e:
         return False, f"Network Error: {str(e)}"
 
-def send_payment_receipt_email(student_email, student_name, amount, receipt_number, plan, student_id=None, instrument=None, start_date=None, expiry_date=None, payment_method="Cash Payment"):
+def send_payment_receipt_email(student_email, student_name, amount, receipt_number, plan, student_id=None, instrument=None, start_date=None, expiry_date=None, payment_method="Cash Payment", next_due_date=None):
     """Send payment receipt via Gmail SMTP using professional template"""
     sender_email = "chords.music.academy@gmail.com"
     sender_password = "xdiu rhua fhpc zwrk"
@@ -123,7 +123,7 @@ Thank you for your payment to Chords Music Academy. We have successfully receive
 - Class Type: Offline
 - Start Date: {start_date_formatted}
 - End Date: {expiry_date_formatted}
-- 🗓️ Next Due Date: {expiry_date_formatted}
+- 🗓️ Next Due Date: {format_date(next_due_date) if next_due_date else expiry_date_formatted}
 
 ---
 
