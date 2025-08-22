@@ -883,11 +883,19 @@ def student_list_module():
             search_term = st.text_input("🔍 Search by Name or ID", placeholder="Enter student name or ID")
         
         with col2:
-            instruments = ['All Instruments'] + sorted(list(df['Instrument'].unique()))
+            # Get all possible instruments (not just from current students)
+            all_instruments = ["Keyboard", "Piano", "Guitar", "Drums", "Violin", "Flute", "Carnatic Vocals", "Hindustani Vocals", "Western Vocals"]
+            current_instruments = list(df['Instrument'].unique()) if not df.empty else []
+            # Combine and remove duplicates, then sort
+            instruments = ['All Instruments'] + sorted(list(set(all_instruments + current_instruments)))
             instrument_filter = st.selectbox("🎼 Filter by Instrument", instruments)
         
         with col3:
-            packages = ['All Packages'] + sorted(list(df['Class Plan'].unique()))
+            # Get all possible packages (not just from current students)
+            all_packages = ["No Package", "1 Month - 8", "3 Month - 24", "6 Month - 48", "12 Month - 96"]
+            current_packages = list(df['Class Plan'].unique()) if not df.empty else []
+            # Combine and remove duplicates, then sort
+            packages = ['All Packages'] + sorted(list(set(all_packages + current_packages)))
             package_filter = st.selectbox("📦 Filter by Package", packages)
         
         with col4:
