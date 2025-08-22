@@ -889,12 +889,21 @@ def student_list_module():
         search_term = st.text_input("🔍 Search by Name or ID", placeholder="Enter student name or ID")
     
     with col2:
-        if st.button("📊 Show All Students", use_container_width=True):
-            search_term = "SHOW_ALL"
+        if 'show_all_students' not in st.session_state:
+            st.session_state.show_all_students = False
+        
+        if not st.session_state.show_all_students:
+            if st.button("📊 Show All Students", use_container_width=True):
+                st.session_state.show_all_students = True
+                st.rerun()
+        else:
+            if st.button("❌ Hide All Students", use_container_width=True):
+                st.session_state.show_all_students = False
+                st.rerun()
     
     # Apply search
-    if search_term:
-        if search_term == "SHOW_ALL":
+    if search_term or st.session_state.get('show_all_students', False):
+        if st.session_state.get('show_all_students', False) and not search_term:
             filtered_df = df.copy()
             st.info(f"📊 Showing all {len(filtered_df)} students")
         else:
