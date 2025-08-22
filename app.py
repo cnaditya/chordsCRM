@@ -974,9 +974,9 @@ def student_list_module():
                 page_df = filtered_df.iloc[start_idx:end_idx]
                 
                 st.markdown(f"### 👥 Student Records (Showing {len(page_df)} of {total_students})")
-            
-            for _, student in page_df.iterrows():
-                emoji = get_instrument_emoji(student['Instrument'])
+                
+                for _, student in page_df.iterrows():
+                    emoji = get_instrument_emoji(student['Instrument'])
                 
                 # Calculate status
                 try:
