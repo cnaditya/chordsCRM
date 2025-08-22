@@ -318,11 +318,11 @@ def dashboard():
 def student_registration():
     display_header("Student Registration")
     
-    # Form inputs outside to enable real-time updates
-    full_name = st.text_input("Full Name")
-    age = st.number_input("Age", min_value=1, max_value=100)
-    mobile = st.text_input("Mobile Number")
-    email = st.text_input("Email Address")
+    # Form inputs with keys to prevent reset issues
+    full_name = st.text_input("Full Name", key="reg_name")
+    age = st.number_input("Age", min_value=1, max_value=100, key="reg_age")
+    mobile = st.text_input("Mobile Number", key="reg_mobile")
+    email = st.text_input("Email Address", key="reg_email")
     from datetime import date
     date_of_birth = st.date_input("Date of Birth", 
                                  min_value=date(1950, 1, 1),
