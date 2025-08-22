@@ -988,8 +988,8 @@ def student_list_module():
                         status_color = "⚪"
                     
                     with st.expander(f"{status_color} {emoji} {student['Full Name']} - {student['Student ID']} ({status})", expanded=False):
-                    # Student info in organized layout
-                    col1, col2, col3 = st.columns(3)
+                        # Student info in organized layout
+                        col1, col2, col3 = st.columns(3)
                     
                     with col1:
                         st.markdown("**📋 Basic Info**")
