@@ -883,18 +883,28 @@ def student_list_module():
             search_term = st.text_input("🔍 Search by Name or ID", placeholder="Enter student name or ID")
         
         with col2:
-            instrument_filter = st.selectbox("🎼 Filter by Instrument", 
-                                           ['All Instruments'] + list(df['Instrument'].unique()))
+            instruments = ['All Instruments'] + sorted(list(df['Instrument'].unique()))
+            instrument_filter = st.selectbox("🎼 Filter by Instrument", instruments)
         
         with col3:
-            package_filter = st.selectbox("📦 Filter by Package", 
-                                        ['All Packages'] + list(df['Class Plan'].unique()))
+            packages = ['All Packages'] + sorted(list(df['Class Plan'].unique()))
+            package_filter = st.selectbox("📦 Filter by Package", packages)
         
         with col4:
-            show_all = st.button("📊 Show All Students", use_container_width=True)
+            if 'show_students' not in st.session_state:
+                st.session_state.show_students = False
+            
+            if not st.session_state.show_students:
+                if st.button("📊 Show All Students", use_container_width=True):
+                    st.session_state.show_students = True
+                    st.rerun()
+            else:
+                if st.button("❌ Hide Students", use_container_width=True):
+                    st.session_state.show_students = False
+                    st.rerun()
         
         # Determine if we should show results
-        should_show_results = bool(search_term) or instrument_filter != 'All Instruments' or package_filter != 'All Packages' or show_all
+        should_show_results = bool(search_term) or instrument_filter != 'All Instruments' or package_filter != 'All Packages' or st.session_state.get('show_students', False)
         
         if should_show_results:
             # Apply filters
