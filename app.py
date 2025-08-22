@@ -902,19 +902,49 @@ def student_list_module():
         if package_filter != 'All Packages':
             filtered_df = filtered_df[filtered_df['Class Plan'] == package_filter]
         
-        # Display results count
+        # Pagination setup
+        students_per_page = 10
+        total_students = len(filtered_df)
+        total_pages = (total_students - 1) // students_per_page + 1 if total_students > 0 else 1
+        
+        # Display results count and pagination info
         if search_term or instrument_filter != 'All Instruments' or package_filter != 'All Packages':
-            st.info(f"📊 Found {len(filtered_df)} student(s) matching your criteria")
+            st.info(f"📊 Found {total_students} student(s) matching your criteria")
         else:
-            st.info(f"📊 Showing all {len(filtered_df)} students")
+            st.info(f"📊 Total {total_students} students")
+        
+        # Pagination controls
+        if total_students > students_per_page:
+            col1, col2, col3 = st.columns([1, 2, 1])
+            
+            with col1:
+                if 'current_page' not in st.session_state:
+                    st.session_state.current_page = 1
+                
+                if st.button("⬅️ Previous", disabled=st.session_state.current_page <= 1):
+                    st.session_state.current_page -= 1
+                    st.rerun()
+            
+            with col2:
+                st.markdown(f"<div style='text-align: center; padding: 0.5rem;'><strong>Page {st.session_state.current_page} of {total_pages}</strong></div>", unsafe_allow_html=True)
+            
+            with col3:
+                if st.button("Next ➡️", disabled=st.session_state.current_page >= total_pages):
+                    st.session_state.current_page += 1
+                    st.rerun()
         
         st.divider()
         
-        # Display students as cards
+        # Display students as cards with pagination
         if not filtered_df.empty:
-            st.markdown("### 👥 Student Records")
+            # Calculate pagination
+            start_idx = (st.session_state.get('current_page', 1) - 1) * students_per_page
+            end_idx = start_idx + students_per_page
+            page_df = filtered_df.iloc[start_idx:end_idx]
             
-            for _, student in filtered_df.iterrows():
+            st.markdown(f"### 👥 Student Records (Showing {len(page_df)} of {total_students})")
+            
+            for _, student in page_df.iterrows():
                 emoji = get_instrument_emoji(student['Instrument'])
                 
                 # Calculate status
