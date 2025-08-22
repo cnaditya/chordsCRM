@@ -318,34 +318,34 @@ def dashboard():
 def student_registration():
     display_header("Student Registration")
     
-    # Form inputs with keys to prevent reset issues
-    full_name = st.text_input("Full Name", key="reg_name")
-    age = st.number_input("Age", min_value=1, max_value=100, key="reg_age")
-    mobile = st.text_input("Mobile Number", key="reg_mobile")
-    email = st.text_input("Email Address", key="reg_email")
-    from datetime import date
-    date_of_birth = st.date_input("Date of Birth", 
-                                 min_value=date(1950, 1, 1),
-                                 max_value=date.today(),
-                                 value=date(2010, 1, 1))
-    sex = st.selectbox("Gender", ["Male", "Female", "Other"])
-    
-    instruments = [
-        "Keyboard", "Piano", "Guitar", "Drums", "Violin", 
-        "Flute", "Carnatic Vocals", "Hindustani Vocals", "Western Vocals"
-    ]
-    instrument_options = [f"{get_instrument_emoji(inst)} {inst}" for inst in instruments]
-    selected = st.selectbox("🎼 Instrument", instrument_options)
-    instrument = selected.split(" ", 1)[1]
-    
-    start_date = st.date_input("Start Date", value=date.today())
-    
-    # Submit button
-    if st.button("Register Student", type="primary"):
-        # Debug output
-        st.write(f"Name: '{full_name}' | Mobile: '{mobile}' | Email: '{email}'")
-        st.write(f"Name valid: {bool(full_name.strip())} | Mobile valid: {bool(mobile.strip())} | Email valid: {bool(email.strip())}")
+    # Use form container to ensure proper input handling
+    with st.form("student_registration_form"):
+        full_name = st.text_input("Full Name")
+        age = st.number_input("Age", min_value=1, max_value=100)
+        mobile = st.text_input("Mobile Number")
+        email = st.text_input("Email Address")
         
+        from datetime import date
+        date_of_birth = st.date_input("Date of Birth", 
+                                     min_value=date(1950, 1, 1),
+                                     max_value=date.today(),
+                                     value=date(2010, 1, 1))
+        sex = st.selectbox("Gender", ["Male", "Female", "Other"])
+        
+        instruments = [
+            "Keyboard", "Piano", "Guitar", "Drums", "Violin", 
+            "Flute", "Carnatic Vocals", "Hindustani Vocals", "Western Vocals"
+        ]
+        instrument_options = [f"{get_instrument_emoji(inst)} {inst}" for inst in instruments]
+        selected = st.selectbox("🎼 Instrument", instrument_options)
+        instrument = selected.split(" ", 1)[1]
+        
+        start_date = st.date_input("Start Date", value=date.today())
+        
+        # Submit button inside form
+        submitted = st.form_submit_button("Register Student", type="primary")
+    # Form processing
+    if submitted:
         if full_name.strip() and mobile.strip() and email.strip():
             student_id = add_student(full_name, age, mobile, email, 
                                    date_of_birth.strftime('%Y-%m-%d'), sex, instrument,
