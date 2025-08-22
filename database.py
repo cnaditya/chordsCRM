@@ -82,10 +82,27 @@ def init_db():
 def get_next_student_id():
     conn = sqlite3.connect('chords_crm.db')
     cursor = conn.cursor()
-    cursor.execute('SELECT COUNT(*) FROM students')
-    count = cursor.fetchone()[0]
+    
+    # Get the highest existing student ID number
+    cursor.execute('SELECT student_id FROM students ORDER BY student_id DESC LIMIT 1')
+    result = cursor.fetchone()
+    
+    if result:
+        # Extract number from last student ID (e.g., CHORDS003 -> 3)
+        last_id = result[0]
+        try:
+            last_number = int(last_id.replace('CHORDS', ''))
+            next_number = last_number + 1
+        except:
+            # Fallback if ID format is unexpected
+            cursor.execute('SELECT COUNT(*) FROM students')
+            next_number = cursor.fetchone()[0] + 1
+    else:
+        # First student
+        next_number = 1
+    
     conn.close()
-    return f"CHORDS{count + 1:03d}"
+    return f"CHORDS{next_number:03d}"
 
 def add_student(full_name, age, mobile, email, date_of_birth, sex, instrument, class_plan, start_date, expiry_date=None):
     conn = sqlite3.connect('chords_crm.db')
