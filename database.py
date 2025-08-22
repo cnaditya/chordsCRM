@@ -94,11 +94,20 @@ def add_student(full_name, age, mobile, email, date_of_birth, sex, instrument, c
     student_id = get_next_student_id()
     
     # Calculate total classes and expiry date based on package duration
-    class_plans = {"1 Month - 8": (8, 30), "3 Month - 24": (24, 90), "6 Month - 48": (48, 180), "12 Month - 96": (96, 365)}
+    class_plans = {
+        "No Package": (0, 0),
+        "1 Month - 8": (8, 30), 
+        "3 Month - 24": (24, 90), 
+        "6 Month - 48": (48, 180), 
+        "12 Month - 96": (96, 365)
+    }
     total_classes, package_days = class_plans[class_plan]
     
     if expiry_date:
         expiry = datetime.strptime(expiry_date, '%Y-%m-%d')
+    elif class_plan == "No Package":
+        # No expiry date for students without package
+        expiry = datetime.strptime(start_date, '%Y-%m-%d')
     else:
         start = datetime.strptime(start_date, '%Y-%m-%d')
         expiry = start + timedelta(days=package_days)
