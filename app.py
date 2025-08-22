@@ -922,13 +922,17 @@ def student_list_module():
             emoji = get_instrument_emoji(student['Instrument'])
             
             # Calculate status
-            try:
-                expiry_date = pd.to_datetime(str(student['Expiry Date']).split(' ')[0])
-                status = 'Expired' if expiry_date < pd.Timestamp.now() else 'Active'
-                status_color = "🔴" if status == 'Expired' else "🟢"
-            except:
+            if student['Class Plan'] == 'No Package':
                 status = 'No Package'
                 status_color = "⚪"
+            else:
+                try:
+                    expiry_date = pd.to_datetime(str(student['Expiry Date']).split(' ')[0])
+                    status = 'Expired' if expiry_date < pd.Timestamp.now() else 'Active'
+                    status_color = "🔴" if status == 'Expired' else "🟢"
+                except:
+                    status = 'No Package'
+                    status_color = "⚪"
             
             with st.expander(f"{status_color} {emoji} {student['Full Name']} - {student['Student ID']} ({status})"):
                 # Basic info
