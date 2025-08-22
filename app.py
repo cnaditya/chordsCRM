@@ -342,6 +342,10 @@ def student_registration():
     
     # Submit button
     if st.button("Register Student", type="primary"):
+        # Debug output
+        st.write(f"Name: '{full_name}' | Mobile: '{mobile}' | Email: '{email}'")
+        st.write(f"Name valid: {bool(full_name.strip())} | Mobile valid: {bool(mobile.strip())} | Email valid: {bool(email.strip())}")
+        
         if full_name.strip() and mobile.strip() and email.strip():
             student_id = add_student(full_name, age, mobile, email, 
                                    date_of_birth.strftime('%Y-%m-%d'), sex, instrument,
