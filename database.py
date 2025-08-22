@@ -72,9 +72,21 @@ def init_db():
             amount REAL,
             payment_date TEXT,
             receipt_number TEXT,
+            notes TEXT,
+            next_due_date TEXT,
             FOREIGN KEY (student_id) REFERENCES students (student_id)
         )
     ''')
+    
+    # Add new columns if they don't exist
+    try:
+        cursor.execute('ALTER TABLE payments ADD COLUMN notes TEXT')
+    except:
+        pass
+    try:
+        cursor.execute('ALTER TABLE payments ADD COLUMN next_due_date TEXT')
+    except:
+        pass
     
     conn.commit()
     conn.close()

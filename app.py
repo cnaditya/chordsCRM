@@ -724,6 +724,40 @@ def payment_module():
                     # Payment Processing Section
                     st.markdown("#### 💰 Payment Processing")
                     
+                    # Calculate payment summary
+                    conn = sqlite3.connect('chords_crm.db')
+                    cursor = conn.cursor()
+                    cursor.execute('SELECT SUM(amount) FROM payments WHERE student_id = ?', (student['Student ID'],))
+                    total_paid = cursor.fetchone()[0] or 0
+                    conn.close()
+                    
+                    # Package fees (you can modify these amounts)
+                    package_fees = {
+                        "1 Month - 8": 3000,
+                        "3 Month - 24": 8000, 
+                        "6 Month - 48": 15000,
+                        "12 Month - 96": 28000,
+                        "No Package": 0
+                    }
+                    
+                    total_fees = package_fees.get(student['Class Plan'], 0)
+                    pending_amount = max(0, total_fees - total_paid)
+                    
+                    # Payment Summary
+                    st.markdown("**💳 Payment Summary**")
+                    pcol1, pcol2, pcol3 = st.columns(3)
+                    with pcol1:
+                        st.metric("📊 Total Fees", f"₹{total_fees:,.0f}")
+                    with pcol2:
+                        st.metric("✅ Paid Amount", f"₹{total_paid:,.0f}")
+                    with pcol3:
+                        if pending_amount > 0:
+                            st.metric("⚠️ Pending Amount", f"₹{pending_amount:,.0f}")
+                        else:
+                            st.metric("🎉 Status", "Fully Paid")
+                    
+                    st.divider()
+                    
                     # WhatsApp reminder for overdue students
                     if student['Status'] == 'Expired':
                         if st.button(f"📱 Send WhatsApp Reminder", key=f"wa_{student['Student ID']}", use_container_width=True):
@@ -742,7 +776,20 @@ def payment_module():
                     pcol1, pcol2 = st.columns(2)
                     
                     with pcol1:
-                        amount = st.number_input("💵 Amount (₹)", min_value=0.0, key=f"amt_{student['Student ID']}")
+                        # Suggest pending amount but allow custom amount
+                        suggested_amount = min(pending_amount, pending_amount) if pending_amount > 0 else 0
+                        amount = st.number_input("💵 Payment Amount (₹)", 
+                                               min_value=0.0, 
+                                               value=float(suggested_amount),
+                                               key=f"amt_{student['Student ID']}")
+                        
+                        # Show remaining after this payment
+                        if amount > 0:
+                            remaining_after_payment = max(0, pending_amount - amount)
+                            if remaining_after_payment > 0:
+                                st.info(f"💡 Remaining after payment: ₹{remaining_after_payment:,.0f}")
+                            else:
+                                st.success("🎉 Package will be fully paid!")
                         
                         # Auto-populate email
                         default_email = student.get('Email', '') or ''
@@ -758,9 +805,22 @@ def payment_module():
                         # Show current package (read-only)
                         st.text_input("📅 Current Package", value=student['Class Plan'], disabled=True, key=f"current_plan_{student['Student ID']}")
                         
-                        # Show current expiry date (read-only)
-                        current_expiry_formatted = datetime.strptime(str(student['Expiry Date']).split(' ')[0], '%Y-%m-%d').strftime('%d-%m-%Y')
-                        st.text_input("🗓️ Current Expiry Date", value=current_expiry_formatted, disabled=True, key=f"current_exp_{student['Student ID']}")
+                        # Next payment due date (editable for installments)
+                        from datetime import timedelta
+                        default_next_due = datetime.now() + timedelta(days=30)  # Default 1 month
+                        next_payment_due = st.date_input(
+                            "🗓️ Next Payment Due Date", 
+                            value=default_next_due.date(),
+                            help="Set when the next installment is due",
+                            key=f"next_due_{student['Student ID']}"
+                        )
+                        
+                        # Payment notes
+                        payment_notes = st.text_area(
+                            "📝 Payment Notes",
+                            placeholder="e.g., First installment of 3, Next due in 2 months",
+                            key=f"notes_{student['Student ID']}"
+                        )
                     
                     # Receipt and calculation info
                     st.markdown("---")
@@ -786,13 +846,14 @@ def payment_module():
                             # Update database
                             conn = sqlite3.connect('chords_crm.db')
                             cursor = conn.cursor()
-                            # Only record payment, don't change student package
-                            # Package changes should be done in Student Edit page
-                            
+                            # Record payment with installment details
                             cursor.execute('''
-                                INSERT INTO payments (student_id, amount, payment_date, receipt_number)
-                                VALUES (?, ?, ?, ?)
-                            ''', (student['Student ID'], amount, datetime.now().strftime('%Y-%m-%d'), receipt_no))
+                                INSERT INTO payments (student_id, amount, payment_date, receipt_number, notes, next_due_date)
+                                VALUES (?, ?, ?, ?, ?, ?)
+                            ''', (student['Student ID'], amount, datetime.now().strftime('%Y-%m-%d'), 
+                                 receipt_no, payment_notes, next_payment_due.strftime('%Y-%m-%d')))
+                            
+                            # Payment already inserted above
                             
                             conn.commit()
                             conn.close()
