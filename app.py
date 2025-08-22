@@ -342,7 +342,7 @@ def student_registration():
     
     # Submit button
     if st.button("Register Student", type="primary"):
-        if full_name and mobile and email:
+        if full_name.strip() and mobile.strip() and email.strip():
             student_id = add_student(full_name, age, mobile, email, 
                                    date_of_birth.strftime('%Y-%m-%d'), sex, instrument,
                                    "No Package", start_date.strftime('%Y-%m-%d'))  # No package initially
