@@ -4,7 +4,7 @@ from datetime import datetime, date
 import sqlite3
 from database import init_db, add_student, mark_attendance, get_all_students, get_dashboard_stats
 from mantra_simple import mantra_scanner as scanner
-from sms_email import send_whatsapp_reminder, send_payment_receipt_email
+from sms_email import send_whatsapp_reminder, send_payment_receipt_email, send_whatsapp_payment_receipt
 from style import apply_custom_css, get_instrument_emoji, display_header, display_metric_card, display_section_header
 # Security module removed
 import os
@@ -885,21 +885,40 @@ def payment_module():
                             conn.commit()
                             conn.close()
                             
-                            # Send receipt
-                            with st.spinner("📧 Sending receipt..."):
+                            # Send receipts (Email + WhatsApp)
+                            with st.spinner("📧 Sending receipts..."):
                                 next_due_str = next_payment_due.strftime('%Y-%m-%d') if next_payment_due else None
-                                success, message = send_payment_receipt_email(
+                                
+                                # Send Email Receipt
+                                email_success, email_message = send_payment_receipt_email(
                                     student_email, student['Full Name'], 
                                     amount, receipt_no, student['Class Plan'],
                                     student['Student ID'], student['Instrument'],
                                     str(student['Start Date']).split(' ')[0], str(student['Expiry Date']).split(' ')[0],
                                     payment_method, next_due_str
                                 )
-                                if success:
-                                    st.success("✅ Payment processed successfully! Receipt sent via email.")
-                                    st.rerun()
+                                
+                                # Send WhatsApp Receipt
+                                next_due_info = f"Next Due: {next_payment_due.strftime('%d-%m-%Y')}" if next_payment_due else "🎉 Fully Paid - No Dues!"
+                                whatsapp_success, whatsapp_message = send_whatsapp_payment_receipt(
+                                    student['Mobile'], student['Full Name'],
+                                    amount, receipt_no, student['Class Plan'],
+                                    datetime.now().strftime('%Y-%m-%d'), next_due_info
+                                )
+                                
+                                # Show results
+                                if email_success and whatsapp_success:
+                                    st.success("✅ Payment processed! Receipts sent via Email & WhatsApp.")
+                                elif email_success:
+                                    st.success("✅ Payment processed! Email receipt sent.")
+                                    st.warning(f"⚠️ WhatsApp failed: {whatsapp_message}")
+                                elif whatsapp_success:
+                                    st.success("✅ Payment processed! WhatsApp receipt sent.")
+                                    st.warning(f"⚠️ Email failed: {email_message}")
                                 else:
-                                    st.error(f"❌ Failed to send receipt: {message}")
+                                    st.error(f"❌ Payment recorded but receipts failed. Email: {email_message}, WhatsApp: {whatsapp_message}")
+                                
+                                st.rerun()
                         else:
                             st.error("⚠️ Please fill in amount and email address")
     else:

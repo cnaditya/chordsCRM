@@ -6,6 +6,64 @@ from datetime import datetime
 
 FAST2SMS_API_KEY = "6TDScuetHNniG5F92kswhvrLJx4IAVRjpoZUb1Y83CzBl0WEd7RLDaifTQwBqekSC2vnMz583p4lKsdX"
 
+def send_whatsapp_payment_receipt(mobile, student_name, amount, receipt_no, plan, payment_date, next_due_info):
+    """Send WhatsApp payment receipt using Fast2SMS template 4587"""
+    
+    # Clean and format mobile number for international support
+    mobile = str(mobile).replace(" ", "").replace("-", "").replace("(", "").replace(")", "")
+    
+    # Add country code if not present
+    if mobile.startswith("+"):
+        mobile = mobile[1:]
+    elif mobile.startswith("91") and len(mobile) == 12:
+        pass
+    elif len(mobile) == 10 and mobile.isdigit():
+        mobile = "91" + mobile
+    elif not mobile.isdigit():
+        return False, f"Invalid mobile number format: {mobile}"
+    
+    if len(mobile) < 10 or len(mobile) > 15 or not mobile.isdigit():
+        return False, f"Invalid mobile number: {mobile}. Must be 10-15 digits with country code."
+    
+    url = "https://www.fast2sms.com/dev/whatsapp"
+    
+    # Format payment date
+    try:
+        date_obj = datetime.strptime(str(payment_date), '%Y-%m-%d')
+        payment_date_formatted = date_obj.strftime('%d-%m-%Y')
+    except:
+        payment_date_formatted = str(payment_date)
+    
+    # Using Fast2SMS template 4587 (payment_receipt)
+    # Variables: student_name, amount, receipt_no, plan, payment_date, next_due_info
+    variables = f"{student_name}|{amount}|{receipt_no}|{plan}|{payment_date_formatted}|{next_due_info}"
+    
+    params = {
+        "authorization": FAST2SMS_API_KEY,
+        "message_id": "4587",
+        "numbers": mobile,
+        "variables_values": variables,
+        "sender_id": "CHORDS"
+    }
+    
+    try:
+        response = requests.get(url, params=params, timeout=10)
+        
+        if response.status_code == 200:
+            try:
+                result = response.json()
+                if result.get('return') == True:
+                    return True, "WhatsApp receipt sent successfully"
+                else:
+                    error_msg = result.get('message', result.get('error', 'Unknown API error'))
+                    return False, f"API Error: {error_msg}"
+            except:
+                return False, f"Invalid JSON response: {response.text}"
+        else:
+            return False, f"HTTP {response.status_code}: {response.text}"
+    except Exception as e:
+        return False, f"Network Error: {str(e)}"
+
 def send_whatsapp_reminder(mobile, student_name, plan, expiry_date):
     """Send WhatsApp reminder using Fast2SMS template"""
     
