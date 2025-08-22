@@ -865,7 +865,7 @@ def payment_module():
 
 # Student list and edit module
 def student_list_module():
-    display_header("Student List & Edit")
+    display_header("Student Management", "Search, Edit & Manage Student Records")
     
     students = get_all_students()
     if students:
@@ -875,129 +875,186 @@ def student_list_module():
             'Extra Classes', 'First Class Date', 'Email', 'Date of Birth', 'Sex'
         ])
         
-        # Convert date columns to datetime (clean time component first)
-        df['Start Date'] = df['Start Date'].astype(str).str.split(' ').str[0]
-        df['Expiry Date'] = df['Expiry Date'].astype(str).str.split(' ').str[0]
-        df['Start Date'] = pd.to_datetime(df['Start Date'])
-        df['Expiry Date'] = pd.to_datetime(df['Expiry Date'])
-        
-        # Make student data editable
-        edited_df = st.data_editor(
-            df[['Student ID', 'Full Name', 'Age', 'Mobile', 'Instrument', 'Class Plan', 'Start Date', 'Expiry Date']],
-            column_config={
-                "Student ID": st.column_config.TextColumn("Student ID", disabled=True),
-                "Full Name": st.column_config.TextColumn("Full Name"),
-                "Age": st.column_config.NumberColumn("Age", min_value=1, max_value=100),
-                "Mobile": st.column_config.TextColumn("Mobile"),
-                "Instrument": st.column_config.SelectboxColumn(
-                    "Instrument",
-                    options=["Keyboard", "Piano", "Guitar", "Drums", "Violin", "Flute", "Carnatic Vocals", "Hindustani Vocals", "Western Vocals"]
-                ),
-                "Class Plan": st.column_config.SelectboxColumn(
-                    "Class Plan",
-                    options=["No Package", "1 Month - 8", "3 Month - 24", "6 Month - 48", "12 Month - 96"]
-                ),
-                "Start Date": st.column_config.DateColumn("Start Date", format="DD-MM-YYYY"),
-                "Expiry Date": st.column_config.DateColumn("Expiry Date", format="DD-MM-YYYY")
-            },
-            hide_index=True,
-            use_container_width=True
-        )
-        
-        # Action buttons
-        col1, col2 = st.columns(2)
+        # Search and filter section
+        st.markdown("### 🔍 Find Student")
+        col1, col2, col3 = st.columns(3)
         
         with col1:
-            if st.button("💾 Save Changes", use_container_width=True):
-                conn = sqlite3.connect('chords_crm.db')
-                cursor = conn.cursor()
-                
-                from datetime import timedelta
-                
-                for idx, row in edited_df.iterrows():
-                    # Auto-calculate expiry date based on package
-                    if row['Class Plan'] != "No Package":
-                        package_days = {
-                            "1 Month - 8": 30, 
-                            "3 Month - 24": 90, 
-                            "6 Month - 48": 180, 
-                            "12 Month - 96": 365
-                        }
-                        start_date = pd.to_datetime(row['Start Date'])
-                        days_to_add = package_days.get(row['Class Plan'], 30)
-                        calculated_expiry = start_date + timedelta(days=days_to_add)
-                        expiry_date = calculated_expiry.strftime('%Y-%m-%d')
-                    else:
-                        expiry_date = str(row['Expiry Date'])
-                    
-                    cursor.execute('''
-                        UPDATE students SET 
-                            full_name = ?, age = ?, mobile = ?, instrument = ?, 
-                            class_plan = ?, start_date = ?, expiry_date = ?
-                        WHERE student_id = ?
-                    ''', (row['Full Name'], row['Age'], row['Mobile'], row['Instrument'],
-                         row['Class Plan'], str(row['Start Date']), expiry_date, row['Student ID']))
-                
-                conn.commit()
-                conn.close()
-                st.success("✅ Student information updated successfully! Expiry dates auto-calculated based on packages.")
-                st.rerun()
+            search_term = st.text_input("🔍 Search by Name or ID", placeholder="Enter student name or ID")
         
         with col2:
-            if st.button("🗑️ Delete Student", use_container_width=True, type="secondary"):
-                st.session_state.show_delete_form = True
-                st.rerun()
+            instrument_filter = st.selectbox("🎼 Filter by Instrument", 
+                                           ['All Instruments'] + list(df['Instrument'].unique()))
         
-        # Delete student form
-        if st.session_state.get('show_delete_form', False):
-            st.markdown("---")
-            st.markdown("### ⚠️ Delete Student")
+        with col3:
+            package_filter = st.selectbox("📦 Filter by Package", 
+                                        ['All Packages'] + list(df['Class Plan'].unique()))
+        
+        # Apply filters
+        filtered_df = df.copy()
+        if search_term:
+            filtered_df = filtered_df[filtered_df['Full Name'].str.contains(search_term, case=False, na=False) | 
+                                    filtered_df['Student ID'].str.contains(search_term, case=False, na=False)]
+        
+        if instrument_filter != 'All Instruments':
+            filtered_df = filtered_df[filtered_df['Instrument'] == instrument_filter]
+        
+        if package_filter != 'All Packages':
+            filtered_df = filtered_df[filtered_df['Class Plan'] == package_filter]
+        
+        # Display results count
+        if search_term or instrument_filter != 'All Instruments' or package_filter != 'All Packages':
+            st.info(f"📊 Found {len(filtered_df)} student(s) matching your criteria")
+        else:
+            st.info(f"📊 Showing all {len(filtered_df)} students")
+        
+        st.divider()
+        
+        # Display students as cards
+        if not filtered_df.empty:
+            st.markdown("### 👥 Student Records")
             
-            # Student selection for deletion
-            student_options = [f"{row['Student ID']} - {row['Full Name']}" for _, row in df.iterrows()]
-            selected_student = st.selectbox("👥 Select Student to Delete:", student_options)
-            
-            if selected_student:
-                student_id = selected_student.split(' - ')[0]
-                student_name = selected_student.split(' - ')[1]
+            for _, student in filtered_df.iterrows():
+                emoji = get_instrument_emoji(student['Instrument'])
                 
-                st.error(f"⚠️ You are about to delete: **{student_name} ({student_id})**")
-                st.warning("🚨 This action cannot be undone! All student data, attendance records, and payment history will be permanently deleted.")
+                # Calculate status
+                try:
+                    expiry_date = pd.to_datetime(str(student['Expiry Date']).split(' ')[0])
+                    status = 'Expired' if expiry_date < pd.Timestamp.now() else 'Active'
+                    status_color = "🔴" if status == 'Expired' else "🟢"
+                except:
+                    status = 'No Package'
+                    status_color = "⚪"
                 
-                # Confirmation
-                confirm_text = st.text_input("Type 'DELETE' to confirm:", key="delete_confirm")
-                
-                col1, col2, col3 = st.columns(3)
-                
-                with col1:
-                    if st.button("❌ Cancel", use_container_width=True):
-                        st.session_state.show_delete_form = False
-                        st.rerun()
-                
-                with col3:
-                    if st.button("🗑️ Confirm Delete", use_container_width=True, type="primary"):
-                        if confirm_text == "DELETE":
-                            # Delete from all related tables
+                with st.expander(f"{status_color} {emoji} {student['Full Name']} - {student['Student ID']} ({status})", expanded=False):
+                    # Student info in organized layout
+                    col1, col2, col3 = st.columns(3)
+                    
+                    with col1:
+                        st.markdown("**📋 Basic Info**")
+                        st.text(f"Name: {student['Full Name']}")
+                        st.text(f"Age: {student['Age']}")
+                        st.text(f"Mobile: {student['Mobile']}")
+                        st.text(f"Email: {student.get('Email', 'N/A')}")
+                    
+                    with col2:
+                        st.markdown("**🎵 Course Info**")
+                        st.text(f"Instrument: {student['Instrument']}")
+                        st.text(f"Package: {student['Class Plan']}")
+                        st.text(f"Classes: {student['Classes Completed']}/{student['Total Classes']}")
+                        st.text(f"Extra Classes: {student['Extra Classes']}")
+                    
+                    with col3:
+                        st.markdown("**📅 Dates**")
+                        start_date = str(student['Start Date']).split(' ')[0]
+                        expiry_date = str(student['Expiry Date']).split(' ')[0]
+                        st.text(f"Start: {pd.to_datetime(start_date).strftime('%d-%m-%Y')}")
+                        if student['Class Plan'] != 'No Package':
+                            st.text(f"Expiry: {pd.to_datetime(expiry_date).strftime('%d-%m-%Y')}")
+                        else:
+                            st.text("Expiry: No Package")
+                    
+                    st.divider()
+                    
+                    # Edit form for this student
+                    st.markdown("**✏️ Edit Student Information**")
+                    
+                    ecol1, ecol2 = st.columns(2)
+                    
+                    with ecol1:
+                        new_name = st.text_input("Full Name", value=student['Full Name'], key=f"name_{student['Student ID']}")
+                        new_age = st.number_input("Age", value=int(student['Age']), min_value=1, max_value=100, key=f"age_{student['Student ID']}")
+                        new_mobile = st.text_input("Mobile", value=student['Mobile'], key=f"mobile_{student['Student ID']}")
+                        new_instrument = st.selectbox("Instrument", 
+                                                    ["Keyboard", "Piano", "Guitar", "Drums", "Violin", "Flute", "Carnatic Vocals", "Hindustani Vocals", "Western Vocals"],
+                                                    index=["Keyboard", "Piano", "Guitar", "Drums", "Violin", "Flute", "Carnatic Vocals", "Hindustani Vocals", "Western Vocals"].index(student['Instrument']),
+                                                    key=f"inst_{student['Student ID']}")
+                    
+                    with ecol2:
+                        new_package = st.selectbox("Package", 
+                                                 ["No Package", "1 Month - 8", "3 Month - 24", "6 Month - 48", "12 Month - 96"],
+                                                 index=["No Package", "1 Month - 8", "3 Month - 24", "6 Month - 48", "12 Month - 96"].index(student['Class Plan']),
+                                                 key=f"pkg_{student['Student ID']}")
+                        
+                        new_start_date = st.date_input("Start Date", 
+                                                      value=pd.to_datetime(start_date).date(),
+                                                      key=f"start_{student['Student ID']}")
+                        
+                        # Show calculated expiry date
+                        if new_package != "No Package":
+                            from datetime import timedelta
+                            package_days = {"1 Month - 8": 30, "3 Month - 24": 90, "6 Month - 48": 180, "12 Month - 96": 365}
+                            calculated_expiry = new_start_date + timedelta(days=package_days[new_package])
+                            st.date_input("Expiry Date (Auto-calculated)", 
+                                        value=calculated_expiry,
+                                        disabled=True,
+                                        key=f"exp_{student['Student ID']}")
+                        else:
+                            st.info("No expiry date for 'No Package'")
+                    
+                    # Action buttons
+                    bcol1, bcol2, bcol3 = st.columns(3)
+                    
+                    with bcol1:
+                        if st.button("💾 Save Changes", key=f"save_{student['Student ID']}", use_container_width=True, type="primary"):
                             conn = sqlite3.connect('chords_crm.db')
                             cursor = conn.cursor()
                             
-                            # Delete from attendance table
-                            cursor.execute('DELETE FROM attendance WHERE student_id = ?', (student_id,))
+                            # Calculate expiry date
+                            if new_package != "No Package":
+                                from datetime import timedelta
+                                package_days = {"1 Month - 8": 30, "3 Month - 24": 90, "6 Month - 48": 180, "12 Month - 96": 365}
+                                calculated_expiry = new_start_date + timedelta(days=package_days[new_package])
+                                expiry_str = calculated_expiry.strftime('%Y-%m-%d')
+                            else:
+                                expiry_str = new_start_date.strftime('%Y-%m-%d')
                             
-                            # Delete from payments table
-                            cursor.execute('DELETE FROM payments WHERE student_id = ?', (student_id,))
-                            
-                            # Delete from students table
-                            cursor.execute('DELETE FROM students WHERE student_id = ?', (student_id,))
+                            cursor.execute('''
+                                UPDATE students SET 
+                                    full_name = ?, age = ?, mobile = ?, instrument = ?, 
+                                    class_plan = ?, start_date = ?, expiry_date = ?
+                                WHERE student_id = ?
+                            ''', (new_name, new_age, new_mobile, new_instrument,
+                                 new_package, new_start_date.strftime('%Y-%m-%d'), expiry_str, student['Student ID']))
                             
                             conn.commit()
                             conn.close()
-                            
-                            st.success(f"✅ Student {student_name} ({student_id}) deleted successfully!")
-                            st.session_state.show_delete_form = False
+                            st.success("✅ Student updated successfully!")
                             st.rerun()
-                        else:
-                            st.error("Please type 'DELETE' to confirm deletion.")
+                    
+                    with bcol3:
+                        if st.button("🗑️ Delete Student", key=f"del_{student['Student ID']}", use_container_width=True, type="secondary"):
+                            st.session_state[f"confirm_delete_{student['Student ID']}"] = True
+                            st.rerun()
+                    
+                    # Delete confirmation
+                    if st.session_state.get(f"confirm_delete_{student['Student ID']}", False):
+                        st.error(f"⚠️ Delete {student['Full Name']} ({student['Student ID']})? This cannot be undone!")
+                        dcol1, dcol2 = st.columns(2)
+                        
+                        with dcol1:
+                            if st.button("❌ Cancel", key=f"cancel_{student['Student ID']}"):
+                                del st.session_state[f"confirm_delete_{student['Student ID']}"]
+                                st.rerun()
+                        
+                        with dcol2:
+                            if st.button("🗑️ Confirm Delete", key=f"confirm_{student['Student ID']}", type="primary"):
+                                conn = sqlite3.connect('chords_crm.db')
+                                cursor = conn.cursor()
+                                
+                                cursor.execute('DELETE FROM attendance WHERE student_id = ?', (student['Student ID'],))
+                                cursor.execute('DELETE FROM payments WHERE student_id = ?', (student['Student ID'],))
+                                cursor.execute('DELETE FROM students WHERE student_id = ?', (student['Student ID'],))
+                                
+                                conn.commit()
+                                conn.close()
+                                
+                                st.success(f"✅ {student['Full Name']} deleted successfully!")
+                                del st.session_state[f"confirm_delete_{student['Student ID']}"]
+                                st.rerun()
+        else:
+            st.warning("🔍 No students found matching your search criteria.")
+
     
     else:
         st.info("No students registered yet.")
