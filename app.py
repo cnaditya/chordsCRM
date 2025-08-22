@@ -345,7 +345,7 @@ def student_registration():
         if full_name and mobile and email:
             student_id = add_student(full_name, age, mobile, email, 
                                    date_of_birth.strftime('%Y-%m-%d'), sex, instrument,
-                                   "1 Month - 8", start_date.strftime('%Y-%m-%d'))  # Default plan
+                                   "No Package", start_date.strftime('%Y-%m-%d'))  # No package initially
             
             st.markdown(f"""
             <div class="success-msg">
@@ -895,7 +895,7 @@ def student_list_module():
                 ),
                 "Class Plan": st.column_config.SelectboxColumn(
                     "Class Plan",
-                    options=["1 Month - 8", "3 Month - 24", "6 Month - 48", "12 Month - 96"]
+                    options=["No Package", "1 Month - 8", "3 Month - 24", "6 Month - 48", "12 Month - 96"]
                 ),
                 "Start Date": st.column_config.DateColumn("Start Date", format="DD-MM-YYYY"),
                 "Expiry Date": st.column_config.DateColumn("Expiry Date", format="DD-MM-YYYY")
@@ -912,18 +912,35 @@ def student_list_module():
                 conn = sqlite3.connect('chords_crm.db')
                 cursor = conn.cursor()
                 
+                from datetime import timedelta
+                
                 for idx, row in edited_df.iterrows():
+                    # Auto-calculate expiry date based on package
+                    if row['Class Plan'] != "No Package":
+                        package_days = {
+                            "1 Month - 8": 30, 
+                            "3 Month - 24": 90, 
+                            "6 Month - 48": 180, 
+                            "12 Month - 96": 365
+                        }
+                        start_date = pd.to_datetime(row['Start Date'])
+                        days_to_add = package_days.get(row['Class Plan'], 30)
+                        calculated_expiry = start_date + timedelta(days=days_to_add)
+                        expiry_date = calculated_expiry.strftime('%Y-%m-%d')
+                    else:
+                        expiry_date = str(row['Expiry Date'])
+                    
                     cursor.execute('''
                         UPDATE students SET 
                             full_name = ?, age = ?, mobile = ?, instrument = ?, 
                             class_plan = ?, start_date = ?, expiry_date = ?
                         WHERE student_id = ?
                     ''', (row['Full Name'], row['Age'], row['Mobile'], row['Instrument'],
-                         row['Class Plan'], str(row['Start Date']), str(row['Expiry Date']), row['Student ID']))
+                         row['Class Plan'], str(row['Start Date']), expiry_date, row['Student ID']))
                 
                 conn.commit()
                 conn.close()
-                st.success("✅ Student information updated successfully!")
+                st.success("✅ Student information updated successfully! Expiry dates auto-calculated based on packages.")
                 st.rerun()
         
         with col2:
