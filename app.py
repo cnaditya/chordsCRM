@@ -731,16 +731,27 @@ def payment_module():
                     total_paid = cursor.fetchone()[0] or 0
                     conn.close()
                     
-                    # Package fees (you can modify these amounts)
-                    package_fees = {
-                        "1 Month - 8": 3000,
-                        "3 Month - 24": 8000, 
-                        "6 Month - 48": 15000,
-                        "12 Month - 96": 28000,
+                    # Chords Music Academy Fee Structure
+                    default_package_fees = {
+                        "1 Month - 8": 4000,
+                        "3 Month - 24": 10800,  # 10% off
+                        "6 Month - 48": 20400,  # 15% off
+                        "12 Month - 96": 38400, # 20% off
                         "No Package": 0
                     }
                     
-                    total_fees = package_fees.get(student['Class Plan'], 0)
+                    # Editable package fee (for bargaining)
+                    default_fee = default_package_fees.get(student['Class Plan'], 0)
+                    total_fees = st.number_input(
+                        f"📋 Package Fee for {student['Class Plan']}",
+                        min_value=0.0,
+                        value=float(default_fee),
+                        step=100.0,
+                        help="Default fee - can be edited for discounts/bargaining",
+                        key=f"package_fee_{student['Student ID']}"
+                    )
+                    
+                    # total_fees is now set above as editable input
                     pending_amount = max(0, total_fees - total_paid)
                     
                     # Payment Summary
