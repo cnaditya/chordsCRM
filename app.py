@@ -1081,8 +1081,11 @@ def student_list_module():
                                                   value=pd.to_datetime(start_date).date(),
                                                   key=f"start_{student['Student ID']}")
                 
-                # Save button
-                if st.button("💾 Save Changes", key=f"save_{student['Student ID']}", use_container_width=True, type="primary"):
+                # Action buttons
+                bcol1, bcol2 = st.columns(2)
+                
+                with bcol1:
+                    if st.button("💾 Save Changes", key=f"save_{student['Student ID']}", use_container_width=True, type="primary"):
                     conn = sqlite3.connect('chords_crm.db')
                     cursor = conn.cursor()
                     
@@ -1107,6 +1110,37 @@ def student_list_module():
                     conn.close()
                     st.success("✅ Student updated successfully!")
                     st.rerun()
+                
+                with bcol2:
+                    if st.button("🗑️ Delete Student", key=f"del_{student['Student ID']}", use_container_width=True, type="secondary"):
+                        st.session_state[f"confirm_delete_{student['Student ID']}"] = True
+                        st.rerun()
+                
+                # Delete confirmation
+                if st.session_state.get(f"confirm_delete_{student['Student ID']}", False):
+                    st.error(f"⚠️ Delete {student['Full Name']} ({student['Student ID']})? This cannot be undone!")
+                    dcol1, dcol2 = st.columns(2)
+                    
+                    with dcol1:
+                        if st.button("❌ Cancel", key=f"cancel_{student['Student ID']}"):
+                            del st.session_state[f"confirm_delete_{student['Student ID']}"]
+                            st.rerun()
+                    
+                    with dcol2:
+                        if st.button("🗑️ Confirm Delete", key=f"confirm_{student['Student ID']}", type="primary"):
+                            conn = sqlite3.connect('chords_crm.db')
+                            cursor = conn.cursor()
+                            
+                            cursor.execute('DELETE FROM attendance WHERE student_id = ?', (student['Student ID'],))
+                            cursor.execute('DELETE FROM payments WHERE student_id = ?', (student['Student ID'],))
+                            cursor.execute('DELETE FROM students WHERE student_id = ?', (student['Student ID'],))
+                            
+                            conn.commit()
+                            conn.close()
+                            
+                            st.success(f"✅ {student['Full Name']} deleted successfully!")
+                            del st.session_state[f"confirm_delete_{student['Student ID']}"]
+                            st.rerun()
     
     else:
         st.info("🔍 Enter search criteria to view student records")

@@ -1,0 +1,178 @@
+CHORDS MUSIC ACADEMY CRM - COMPLETE SETUP DOCUMENTATION
+========================================================
+
+OVERVIEW:
+---------
+Complete Student Management System with biometric attendance, flexible payments, 
+email & WhatsApp integration for music academies.
+
+QUICK SETUP (NEW MACHINE):
+---------------------------
+1. Install Python 3.8+ from https://python.org/downloads
+2. Install Git from https://git-scm.com/downloads
+3. Clone: git clone https://github.com/cnaditya/chordsCRM.git
+4. Install: pip install streamlit pandas requests openpyxl sqlite3
+5. Run: streamlit run app.py
+6. Access: http://localhost:8501
+
+LOGIN CREDENTIALS:
+------------------
+Username: admin
+Password: admin1
+
+EMAIL CONFIGURATION:
+--------------------
+File: sms_email.py
+Gmail Account: chords.music.academy@gmail.com
+App Password: xdiu rhua fhpc zwrk
+SMTP Server: smtp.gmail.com:587
+
+WHATSAPP/SMS CONFIGURATION:
+---------------------------
+File: sms_email.py
+API Key: 6TDScuetHNniG5F92kswhvrLJx4IAVRjpoZUb1Y83CzBl0WEd7RLDaifTQwBqekSC2vnMz583p4lKsdX
+Sender ID: CHORDS
+
+WhatsApp Templates:
+Template 3004 (Overdue Reminders):
+"Dear {{1}}, this is a reminder from Chords Music Academy.
+Your fee for {{2}} classes is due on {{3}}. Pay before the due date and get exclusive offers on your next enrollment.
+🎶 Let the music continue without interruption!
+📞 Contact us at +91 7981585309"
+
+Template 4587 (Payment Receipts):
+"Dear {{1}}, 
+Thank you for your payment to Chords Music Academy! 🎵
+💰 Payment Details:
+- Amount: ₹{{2}}
+- Receipt No: {{3}}
+- Package: {{4}}
+- Payment Date: {{5}}
+{{6}}
+🎶 Keep practicing and let your musical journey flourish!
+📞 Contact us at +91 7981585309"
+
+FEE STRUCTURE:
+--------------
+1 Month - 8 classes = ₹4,000
+3 Month - 24 classes = ₹10,800 (10% off)
+6 Month - 48 classes = ₹20,400 (15% off)
+12 Month - 96 classes = ₹38,400 (20% off)
+
+DATABASE STRUCTURE:
+-------------------
+SQLite Database: chords_crm.db (auto-created)
+
+Tables:
+1. students - Student information (17 columns)
+2. attendance - Daily attendance records
+3. payments - Payment history with installment tracking
+4. allowed_ips - IP management (optional)
+
+FILE STRUCTURE:
+---------------
+app.py - Main application (1,400+ lines)
+database.py - Database operations
+style.py - UI/UX styling & components
+sms_email.py - Email & WhatsApp communication
+mantra_simple.py - Biometric integration
+biometric.py - Biometric helper functions
+chords_crm.db - SQLite database (auto-created)
+
+CORE FEATURES:
+--------------
+1. Student Registration (basic details only, no package)
+2. Student List & Edit (assign packages, auto-calculate expiry)
+3. Flexible Payment Processing (installments, bargaining)
+4. Dual Receipts (Email + WhatsApp)
+5. Biometric Attendance (Mantra MFS100 scanner)
+6. Due Alerts & Reminders
+7. Reports & Analytics
+
+STUDENT WORKFLOW:
+-----------------
+1. Register Student → Basic details, "No Package" status
+2. Edit Student → Assign package, expiry auto-calculated
+3. Payment Processing → Flexible installments or full payment
+4. Dual receipts sent automatically
+
+PAYMENT FEATURES:
+-----------------
+- Payment Summary: Total Fees, Paid Amount, Pending Amount
+- Flexible Payments: Partial or full payments allowed
+- Installment Tracking: Next due dates, payment notes
+- Bargaining Support: Editable package fees
+- Payment Status: "Installment Payment" or "Fully Paid - No Dues"
+- Dual Receipts: Email (detailed) + WhatsApp (quick)
+
+INSTRUMENTS SUPPORTED:
+----------------------
+Keyboard, Piano, Guitar, Drums, Violin, Flute, 
+Carnatic Vocals, Hindustani Vocals, Western Vocals
+
+MOBILE NUMBER SUPPORT:
+----------------------
+Indian: 7702031818 (auto-adds 91)
+Indian with code: 917702031818
+International: +1234567890, +447123456789
+Any country code (10-15 digits)
+
+DEPLOYMENT OPTIONS:
+-------------------
+Local: streamlit run app.py --server.address 0.0.0.0
+Cloud: https://share.streamlit.io (connect GitHub repo)
+Server: Deploy on AWS/DigitalOcean/VPS
+
+CONTACT INFORMATION:
+--------------------
+Phone: +91-7981585309
+Website: www.chordsmusicacademy.in
+Email: chords.music.academy@gmail.com
+GitHub: https://github.com/cnaditya/chordsCRM
+
+CUSTOMIZATION:
+--------------
+Login: Change username/password in app.py line ~200
+Fees: Update default_package_fees in app.py payment_module
+Contact: Update phone/email in sms_email.py templates
+Colors: Modify style.py for UI colors and themes
+
+TROUBLESHOOTING:
+----------------
+1. "streamlit command not found" → Use: python -m streamlit run app.py
+2. WhatsApp not sending → Check API key, template approval, mobile format
+3. Email not sending → Check Gmail app password, SMTP settings
+4. Biometric not working → Install Mantra drivers, check USB connection
+5. Database errors → Delete chords_crm.db to reset
+
+BIOMETRIC SCANNER:
+------------------
+Device: Mantra MFS100
+Files: mantra_simple.py, biometric.py
+Functions: connect_scanner(), enroll_fingerprint(), scan_fingerprint()
+
+BACKUP:
+-------
+Database: cp chords_crm.db chords_crm_backup_$(date +%Y%m%d).db
+Code: Git repository automatically backed up
+
+SECURITY:
+---------
+- Login-based access control
+- Session management
+- Input validation
+- SQL injection protection
+- International mobile validation
+
+PERFORMANCE:
+------------
+- Handles 1000+ students efficiently
+- Pagination (10 students per page)
+- Search-first approach
+- Optimized database queries
+
+READY FOR PRODUCTION USE IN ANY MUSIC ACADEMY WORLDWIDE!
+
+Built by: Aaditya CN for Chords Music Academy
+Documentation Version: 1.0
+Last Updated: August 2025
