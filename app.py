@@ -1086,30 +1086,30 @@ def student_list_module():
                 
                 with bcol1:
                     if st.button("💾 Save Changes", key=f"save_{student['Student ID']}", use_container_width=True, type="primary"):
-                    conn = sqlite3.connect('chords_crm.db')
-                    cursor = conn.cursor()
-                    
-                    # Calculate expiry date
-                    if new_package != "No Package":
-                        from datetime import timedelta
-                        package_days = {"1 Month - 8": 30, "3 Month - 24": 90, "6 Month - 48": 180, "12 Month - 96": 365}
-                        calculated_expiry = new_start_date + timedelta(days=package_days[new_package])
-                        expiry_str = calculated_expiry.strftime('%Y-%m-%d')
-                    else:
-                        expiry_str = new_start_date.strftime('%Y-%m-%d')
-                    
-                    cursor.execute('''
-                        UPDATE students SET 
-                            full_name = ?, age = ?, mobile = ?, instrument = ?, 
-                            class_plan = ?, start_date = ?, expiry_date = ?
-                        WHERE student_id = ?
-                    ''', (new_name, new_age, new_mobile, new_instrument,
-                         new_package, new_start_date.strftime('%Y-%m-%d'), expiry_str, student['Student ID']))
-                    
-                    conn.commit()
-                    conn.close()
-                    st.success("✅ Student updated successfully!")
-                    st.rerun()
+                        conn = sqlite3.connect('chords_crm.db')
+                        cursor = conn.cursor()
+                        
+                        # Calculate expiry date
+                        if new_package != "No Package":
+                            from datetime import timedelta
+                            package_days = {"1 Month - 8": 30, "3 Month - 24": 90, "6 Month - 48": 180, "12 Month - 96": 365}
+                            calculated_expiry = new_start_date + timedelta(days=package_days[new_package])
+                            expiry_str = calculated_expiry.strftime('%Y-%m-%d')
+                        else:
+                            expiry_str = new_start_date.strftime('%Y-%m-%d')
+                        
+                        cursor.execute('''
+                            UPDATE students SET 
+                                full_name = ?, age = ?, mobile = ?, instrument = ?, 
+                                class_plan = ?, start_date = ?, expiry_date = ?
+                            WHERE student_id = ?
+                        ''', (new_name, new_age, new_mobile, new_instrument,
+                             new_package, new_start_date.strftime('%Y-%m-%d'), expiry_str, student['Student ID']))
+                        
+                        conn.commit()
+                        conn.close()
+                        st.success("✅ Student updated successfully!")
+                        st.rerun()
                 
                 with bcol2:
                     if st.button("🗑️ Delete Student", key=f"del_{student['Student ID']}", use_container_width=True, type="secondary"):
