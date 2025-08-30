@@ -1035,7 +1035,11 @@ def student_list_module():
                 with col1:
                     st.markdown("**📋 Basic Info**")
                     st.text(f"Name: {student['Full Name']}")
-                    st.text(f"Age: {student['Age'] if student['Age'] is not None else 'N/A'}")
+                    try:
+                        age_display = str(int(student['Age'])) if student['Age'] is not None else 'N/A'
+                    except (ValueError, TypeError):
+                        age_display = 'N/A'
+                    st.text(f"Age: {age_display}")
                     st.text(f"Mobile: {student['Mobile']}")
                 
                 with col2:
@@ -1063,7 +1067,10 @@ def student_list_module():
                 
                 with ecol1:
                     new_name = st.text_input("Full Name", value=student['Full Name'], key=f"name_{student['Student ID']}")
-                    age_value = int(student['Age']) if student['Age'] is not None else 18
+                    try:
+                        age_value = int(student['Age']) if student['Age'] is not None else 18
+                    except (ValueError, TypeError):
+                        age_value = 18
                     new_age = st.number_input("Age", value=age_value, min_value=1, max_value=100, key=f"age_{student['Student ID']}")
                     new_mobile = st.text_input("Mobile", value=student['Mobile'], key=f"mobile_{student['Student ID']}")
                 
