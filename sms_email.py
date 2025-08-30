@@ -6,6 +6,9 @@ from datetime import datetime
 
 FAST2SMS_API_KEY = "6TDScuetHNniG5F92kswhvrLJx4IAVRjpoZUb1Y83CzBl0WEd7RLDaifTQwBqekSC2vnMz583p4lKsdX"
 
+# PhonePe QR Code URL (replace with your actual URL from Fast2SMS media library)
+PHONEPE_QR_URL = "https://media.fast2sms.com/phonepe-qr-chords.jpg"  # Update this URL after uploading to Fast2SMS
+
 def send_whatsapp_payment_receipt(mobile, student_name, amount, receipt_no, plan, payment_date, next_due_info):
     """Send WhatsApp payment receipt using Fast2SMS template 4587"""
     
@@ -64,7 +67,7 @@ def send_whatsapp_payment_receipt(mobile, student_name, amount, receipt_no, plan
     except Exception as e:
         return False, f"Network Error: {str(e)}"
 
-def send_whatsapp_reminder(mobile, student_name, plan, expiry_date):
+def send_whatsapp_reminder(mobile, student_name, plan, expiry_date, include_qr=True):
     """Send WhatsApp reminder using Fast2SMS template"""
     
     # Clean and format mobile number for international support
@@ -112,6 +115,10 @@ def send_whatsapp_reminder(mobile, student_name, plan, expiry_date):
         "sender_id": "CHORDS"
     }
     
+    # Add QR code media if requested and available
+    if include_qr:
+        params["media_url"] = PHONEPE_QR_URL
+    
     try:
         response = requests.get(url, params=params, timeout=10)
         
@@ -127,7 +134,7 @@ def send_whatsapp_reminder(mobile, student_name, plan, expiry_date):
                 print(f"DEBUG: JSON Result: {result}")
                 
                 if result.get('return') == True:
-                    return True, "WhatsApp reminder sent successfully"
+                    return True, "WhatsApp reminder with QR code sent successfully"
                 else:
                     error_msg = result.get('message', result.get('error', 'Unknown API error'))
                     return False, f"API Error: {error_msg}"
