@@ -104,20 +104,19 @@ def send_whatsapp_reminder(mobile, student_name, plan, expiry_date, include_qr=T
     except:
         expiry_date_formatted = str(expiry_date)
     
-    # Using Fast2SMS template 3004 (fees_reminder_new) - MARKETING category
+    # Using Fast2SMS template 4899 (payment_reminder_with_qr) - MARKETING category
     variables = f"{student_name}|{plan}|{expiry_date_formatted}"
     
     params = {
         "authorization": FAST2SMS_API_KEY,
-        "message_id": "3004",
+        "message_id": "4899",
         "numbers": mobile,
         "variables_values": variables,
         "sender_id": "CHORDS"
     }
     
-    # Add QR code media if requested and available
-    if include_qr:
-        params["media_url"] = PHONEPE_QR_URL
+    # Template 4899 already includes QR code as header image
+    # No need to add media_url as QR is embedded in template
     
     try:
         response = requests.get(url, params=params, timeout=10)
