@@ -6,8 +6,8 @@ from datetime import datetime
 
 FAST2SMS_API_KEY = "6TDScuetHNniG5F92kswhvrLJx4IAVRjpoZUb1Y83CzBl0WEd7RLDaifTQwBqekSC2vnMz583p4lKsdX"
 
-# PhonePe QR Code URL (replace with your actual URL from Fast2SMS media library)
-PHONEPE_QR_URL = "https://media.fast2sms.com/phonepe-qr-chords.jpg"  # Update this URL after uploading to Fast2SMS
+# PhonePe QR Code URL - GitHub raw URL
+PHONEPE_QR_URL = "https://raw.githubusercontent.com/cnaditya/chordsCRM/main/phonepe-qr-code.jpg"
 
 def send_whatsapp_payment_receipt(mobile, student_name, amount, receipt_no, plan, payment_date, next_due_info):
     """Send WhatsApp payment receipt using Fast2SMS template 4587"""
@@ -104,7 +104,8 @@ def send_whatsapp_reminder(mobile, student_name, plan, expiry_date, include_qr=T
     except:
         expiry_date_formatted = str(expiry_date)
     
-    # Using Fast2SMS template 4899 (QR image already embedded in template)
+    # Using Fast2SMS template 4899 with QR code header
+    # Template requires exactly 3 variables: Var1|Var2|Var3 + media_url
     variables = f"{student_name}|{plan}|{expiry_date_formatted}"
     
     params = {
@@ -112,6 +113,7 @@ def send_whatsapp_reminder(mobile, student_name, plan, expiry_date, include_qr=T
         "message_id": "4899",
         "numbers": mobile,
         "variables_values": variables,
+        "media_url": PHONEPE_QR_URL,  # Required for header image
         "sender_id": "CHORDS"
     }
     
