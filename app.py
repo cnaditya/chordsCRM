@@ -1067,14 +1067,24 @@ def student_list_module():
                     new_mobile = st.text_input("Mobile", value=student['Mobile'], key=f"mobile_{student['Student ID']}")
                 
                 with ecol2:
+                    instruments_list = ["Keyboard", "Piano", "Guitar", "Drums", "Violin", "Flute", "Carnatic Vocals", "Hindustani Vocals", "Western Vocals"]
+                    try:
+                        current_index = instruments_list.index(student['Instrument'])
+                    except ValueError:
+                        current_index = 0  # Default to first instrument if not found
                     new_instrument = st.selectbox("Instrument", 
-                                                ["Keyboard", "Piano", "Guitar", "Drums", "Violin", "Flute", "Carnatic Vocals", "Hindustani Vocals", "Western Vocals"],
-                                                index=["Keyboard", "Piano", "Guitar", "Drums", "Violin", "Flute", "Carnatic Vocals", "Hindustani Vocals", "Western Vocals"].index(student['Instrument']),
+                                                instruments_list,
+                                                index=current_index,
                                                 key=f"inst_{student['Student ID']}")
                     
+                    packages_list = ["No Package", "1 Month - 8", "3 Month - 24", "6 Month - 48", "12 Month - 96"]
+                    try:
+                        package_index = packages_list.index(student['Class Plan'])
+                    except ValueError:
+                        package_index = 0  # Default to first package if not found
                     new_package = st.selectbox("Package", 
-                                             ["No Package", "1 Month - 8", "3 Month - 24", "6 Month - 48", "12 Month - 96"],
-                                             index=["No Package", "1 Month - 8", "3 Month - 24", "6 Month - 48", "12 Month - 96"].index(student['Class Plan']),
+                                             packages_list,
+                                             index=package_index,
                                              key=f"pkg_{student['Student ID']}")
                     
                     new_start_date = st.date_input("Start Date", 
@@ -1170,7 +1180,7 @@ def student_list_module_old():
         
         with col2:
             # Get all possible instruments (not just from current students)
-            all_instruments = ["Keyboard", "Piano", "Guitar", "Drums", "Violin", "Flute", "Carnatic Vocals", "Hindustani Vocals", "Western Vocals"]
+            all_instruments = ["Keyboard", "Piano", "Guitar", "Drums", "Violin", "Flute", "Carnatic Vocals", "Hindustani Vocals", "Western Vocals", "Carnatic Vocal"]
             current_instruments = list(df['Instrument'].unique()) if not df.empty else []
             # Combine and remove duplicates, then sort
             instruments = ['All Instruments'] + sorted(list(set(all_instruments + current_instruments)))
@@ -1312,15 +1322,25 @@ def student_list_module_old():
                         new_name = st.text_input("Full Name", value=student['Full Name'], key=f"name_{student['Student ID']}")
                         new_age = st.number_input("Age", value=int(student['Age']), min_value=1, max_value=100, key=f"age_{student['Student ID']}")
                         new_mobile = st.text_input("Mobile", value=student['Mobile'], key=f"mobile_{student['Student ID']}")
+                        instruments_list = ["Keyboard", "Piano", "Guitar", "Drums", "Violin", "Flute", "Carnatic Vocals", "Hindustani Vocals", "Western Vocals"]
+                        try:
+                            current_index = instruments_list.index(student['Instrument'])
+                        except ValueError:
+                            current_index = 0  # Default to first instrument if not found
                         new_instrument = st.selectbox("Instrument", 
-                                                    ["Keyboard", "Piano", "Guitar", "Drums", "Violin", "Flute", "Carnatic Vocals", "Hindustani Vocals", "Western Vocals"],
-                                                    index=["Keyboard", "Piano", "Guitar", "Drums", "Violin", "Flute", "Carnatic Vocals", "Hindustani Vocals", "Western Vocals"].index(student['Instrument']),
+                                                    instruments_list,
+                                                    index=current_index,
                                                     key=f"inst_{student['Student ID']}")
                     
                     with ecol2:
+                        packages_list = ["No Package", "1 Month - 8", "3 Month - 24", "6 Month - 48", "12 Month - 96"]
+                        try:
+                            package_index = packages_list.index(student['Class Plan'])
+                        except ValueError:
+                            package_index = 0  # Default to first package if not found
                         new_package = st.selectbox("Package", 
-                                                 ["No Package", "1 Month - 8", "3 Month - 24", "6 Month - 48", "12 Month - 96"],
-                                                 index=["No Package", "1 Month - 8", "3 Month - 24", "6 Month - 48", "12 Month - 96"].index(student['Class Plan']),
+                                                 packages_list,
+                                                 index=package_index,
                                                  key=f"pkg_{student['Student ID']}")
                         
                         new_start_date = st.date_input("Start Date", 
