@@ -254,3 +254,26 @@ def get_dashboard_stats():
     
     conn.close()
     return total_students, active_students, expired_students, today_attendance
+
+def get_students_by_instrument(instrument=None):
+    """Get students filtered by instrument for bulk messaging"""
+    conn = sqlite3.connect('chords_crm.db')
+    cursor = conn.cursor()
+    
+    if instrument and instrument != "All Students":
+        cursor.execute('SELECT student_id, full_name, mobile, instrument FROM students WHERE instrument = ?', (instrument,))
+    else:
+        cursor.execute('SELECT student_id, full_name, mobile, instrument FROM students')
+    
+    students = cursor.fetchall()
+    conn.close()
+    return students
+
+def get_all_instruments():
+    """Get list of all instruments for filtering"""
+    conn = sqlite3.connect('chords_crm.db')
+    cursor = conn.cursor()
+    cursor.execute('SELECT DISTINCT instrument FROM students WHERE instrument IS NOT NULL ORDER BY instrument')
+    instruments = [row[0] for row in cursor.fetchall()]
+    conn.close()
+    return instruments
