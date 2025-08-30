@@ -104,15 +104,15 @@ def send_whatsapp_reminder(mobile, student_name, plan, expiry_date, include_qr=T
     except:
         expiry_date_formatted = str(expiry_date)
     
-    # Using Fast2SMS template 3004 (fees_reminder_new) - MARKETING category
-    # Template 4899 has format issues, using working template 3004
+    # Using Fast2SMS template 4899 (chords_payment_reminder_qr) - MARKETING category
     variables = f"{student_name}|{plan}|{expiry_date_formatted}"
     
     params = {
         "authorization": FAST2SMS_API_KEY,
-        "message_id": "3004",
+        "message_id": "4899",
         "numbers": mobile,
         "variables_values": variables,
+        "media_url": PHONEPE_QR_URL,  # Required for template 4899
         "sender_id": "CHORDS"
     }
     
@@ -126,7 +126,7 @@ def send_whatsapp_reminder(mobile, student_name, plan, expiry_date, include_qr=T
             try:
                 result = response.json()
                 if result.get('return') == True:
-                    return True, "WhatsApp reminder sent successfully"
+                    return True, "WhatsApp reminder with QR code sent successfully"
                 else:
                     error_msg = result.get('message', result.get('error', 'Unknown API error'))
                     return False, f"API Error: {error_msg}"
