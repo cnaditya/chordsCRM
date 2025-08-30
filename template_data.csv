@@ -16,3 +16,7 @@ Your fee for {Var2} classes is due on {Var3}. Pay before the due date and get ex
 
 🎶 Let the music continue without interruption!  
 📞 Contact us at +91 7981585309 | BUTTON: Call (PHONE_NUMBER) - +917981585309"
+4899,payment_reminder_qr,Chords Music Academy (+917981585309),MARKETING,APPROVED,3.0,Var1|Var2|Var3,Header Image (QR Code),https://www.fast2sms.com/dev/whatsapp?authorization=<YOUR_API_KEY>&message_id=4899&numbers=<MOBILE_NUMBER>&variables_values=Var1|Var2|Var3,"HEADER: IMAGE (PhonePe QR Code) | BODY: Hi {Var1}, Your {Var2} package expires on {Var3}.
+💰 Pay using QR code above
+📱 Scan & Pay instantly
+For queries: 7981585309 - Chords Music Academy"
