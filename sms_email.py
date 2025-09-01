@@ -104,8 +104,10 @@ def send_whatsapp_reminder(mobile, student_name, plan, expiry_date, include_qr=T
     except:
         expiry_date_formatted = str(expiry_date)
     
-    # Using Fast2SMS template 3004 with UPI payment info
-    variables = f"{student_name}|{plan}|{expiry_date_formatted}"
+    # Using Fast2SMS template 3004 + add UPI info in variables
+    # Add UPI payment info to the plan variable
+    plan_with_upi = f"{plan}\n\n💰 Pay via UPI: 7702031818\n📱 Any UPI app (GPay, PhonePe, Paytm)"
+    variables = f"{student_name}|{plan_with_upi}|{expiry_date_formatted}"
     
     params = {
         "authorization": FAST2SMS_API_KEY,
