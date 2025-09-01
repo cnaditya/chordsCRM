@@ -123,9 +123,11 @@ def send_whatsapp_reminder(mobile, student_name, plan, expiry_date, include_qr=T
         
         # Debug logging for template 4986
         print(f"DEBUG 4986: URL: {url}")
+        print(f"DEBUG 4986: Full URL: {response.url}")
         print(f"DEBUG 4986: Params: {params}")
         print(f"DEBUG 4986: Status: {response.status_code}")
         print(f"DEBUG 4986: Response: {response.text}")
+        print(f"DEBUG 4986: Request Headers: {response.request.headers}")
         
         if response.status_code == 200:
             try:
@@ -142,6 +144,7 @@ def send_whatsapp_reminder(mobile, student_name, plan, expiry_date, include_qr=T
         else:
             return False, f"HTTP {response.status_code}: {response.text}"
     except Exception as e:
+        print(f"DEBUG 4986: Exception occurred: {str(e)}")
         return False, f"Network Error: {str(e)}"
 
 def send_payment_receipt_email(student_email, student_name, amount, receipt_number, plan, student_id=None, instrument=None, start_date=None, expiry_date=None, payment_method="Cash Payment", next_due_date=None):
