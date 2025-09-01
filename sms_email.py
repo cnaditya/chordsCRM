@@ -6,9 +6,98 @@ from datetime import datetime
 
 FAST2SMS_API_KEY = "6TDScuetHNniG5F92kswhvrLJx4IAVRjpoZUb1Y83CzBl0WEd7RLDaifTQwBqekSC2vnMz583p4lKsdX"
 
-# PhonePe QR Code URL - GitHub raw URL
-PHONEPE_QR_URL = "https://raw.githubusercontent.com/cnaditya/chordsCRM/main/phonepe-qr-code.jpg"
+def send_whatsapp_reminder(mobile, student_name, plan, expiry_date, include_qr=True):
+    """Send WhatsApp reminder using Fast2SMS template 4986 - FIXED VERSION"""
+    
+    print(f"FUNCTION CALLED: send_whatsapp_reminder for {student_name} at {mobile}")
+    
+    # Clean and format mobile number
+    mobile = str(mobile).replace(" ", "").replace("-", "").replace("(", "").replace(")", "")
+    
+    # Add country code if not present
+    if mobile.startswith("+"):
+        mobile = mobile[1:]
+    elif mobile.startswith("91") and len(mobile) == 12:
+        pass
+    elif len(mobile) == 10 and mobile.isdigit():
+        mobile = "91" + mobile
+    elif not mobile.isdigit():
+        return False, f"Invalid mobile number format: {mobile}"
+    
+    # Validate final format
+    if len(mobile) < 10 or len(mobile) > 15 or not mobile.isdigit():
+        return False, f"Invalid mobile number: {mobile}. Must be 10-15 digits with country code."
+    
+    url = "https://www.fast2sms.com/dev/whatsapp"
+    
+    # Format date to dd-mm-yyyy
+    if " 00:00:00" in str(expiry_date):
+        expiry_date = str(expiry_date).replace(" 00:00:00", "")
+    
+    try:
+        date_obj = datetime.strptime(str(expiry_date), '%Y-%m-%d')
+        expiry_date_formatted = date_obj.strftime('%d-%m-%Y')
+    except:
+        expiry_date_formatted = str(expiry_date)
+    
+    # Template 4986 parameters
+    variables = f"{student_name}|{plan}|{expiry_date_formatted}"
+    
+    params = {
+        "authorization": FAST2SMS_API_KEY,
+        "message_id": "4986",
+        "numbers": mobile,
+        "variables_values": variables
+    }
+    
+    try:
+        response = requests.get(url, params=params, timeout=10)
+        
+        print(f"DEBUG 4986: URL: {url}")
+        print(f"DEBUG 4986: Full URL: {response.url}")
+        print(f"DEBUG 4986: Params: {params}")
+        print(f"DEBUG 4986: Status: {response.status_code}")
+        print(f"DEBUG 4986: Response: {response.text}")
+        
+        if response.status_code == 200:
+            try:
+                result = response.json()
+                print(f"DEBUG 4986: JSON Result: {result}")
+                
+                if result.get('return') == True:
+                    return True, "WhatsApp reminder with payment options sent successfully"
+                else:
+                    error_msg = result.get('message', result.get('error', f'Unknown error - Raw JSON: {result}'))
+                    return False, f"Template 4986 Error: {error_msg}"
+            except:
+                return False, f"Invalid JSON response: {response.text}"
+        else:
+            return False, f"HTTP {response.status_code}: {response.text}"
+    except Exception as e:
+        print(f"DEBUG 4986: Exception occurred: {str(e)}")
+        return False, f"Network Error: {str(e)}"
 
+def test_fast2sms():
+    """Test function to check Fast2SMS connectivity"""
+    print("TESTING Fast2SMS connectivity...")
+    url = "https://www.fast2sms.com/dev/whatsapp"
+    params = {
+        "authorization": FAST2SMS_API_KEY,
+        "message_id": "3004",
+        "numbers": "917702031818",
+        "variables_values": "Test|Package|01-01-2025"
+    }
+    try:
+        response = requests.get(url, params=params, timeout=10)
+        print(f"TEST: Status: {response.status_code}")
+        print(f"TEST: Response: {response.text}")
+        print(f"TEST: Full URL: {response.url}")
+        return response.status_code, response.text
+    except Exception as e:
+        print(f"TEST: Error: {e}")
+        return None, str(e)
+
+# Keep other functions unchanged
 def send_whatsapp_payment_receipt(mobile, student_name, amount, receipt_no, plan, payment_date, next_due_info):
     """Send WhatsApp payment receipt using Fast2SMS template 4587"""
     
@@ -65,86 +154,6 @@ def send_whatsapp_payment_receipt(mobile, student_name, amount, receipt_no, plan
         else:
             return False, f"HTTP {response.status_code}: {response.text}"
     except Exception as e:
-        return False, f"Network Error: {str(e)}"
-
-def send_whatsapp_reminder(mobile, student_name, plan, expiry_date, include_qr=True):
-    """Send WhatsApp reminder using Fast2SMS template"""
-    
-    # Clean and format mobile number for international support
-    mobile = str(mobile).replace(" ", "").replace("-", "").replace("(", "").replace(")", "")
-    
-    # Add country code if not present
-    if mobile.startswith("+"):
-        # Already has country code, remove + for API
-        mobile = mobile[1:]
-    elif mobile.startswith("91") and len(mobile) == 12:
-        # Already has 91 prefix
-        pass
-    elif len(mobile) == 10 and mobile.isdigit():
-        # Indian number without country code, add 91
-        mobile = "91" + mobile
-    elif not mobile.isdigit():
-        return False, f"Invalid mobile number format: {mobile}"
-    
-    # Validate final format
-    if len(mobile) < 10 or len(mobile) > 15 or not mobile.isdigit():
-        return False, f"Invalid mobile number: {mobile}. Must be 10-15 digits with country code."
-    
-    url = "https://www.fast2sms.com/dev/whatsapp"
-    
-    # Clean and format date to dd-mm-yyyy
-    if " 00:00:00" in str(expiry_date):
-        expiry_date = str(expiry_date).replace(" 00:00:00", "")
-    
-    # Convert to dd-mm-yyyy format
-    try:
-        from datetime import datetime
-        date_obj = datetime.strptime(str(expiry_date), '%Y-%m-%d')
-        expiry_date_formatted = date_obj.strftime('%d-%m-%Y')
-    except:
-        expiry_date_formatted = str(expiry_date)
-    
-    # Using Fast2SMS template 4986 (chords_payment_reminder_upi) - EXACT implementation
-    variables = f"{student_name}|{plan}|{expiry_date_formatted}"
-    
-    params = {
-        "authorization": FAST2SMS_API_KEY,
-        "message_id": "4986",
-        "numbers": mobile,
-        "variables_values": variables,
-        "sender_id": "CHORDS"
-    }
-    
-    # Template 4899 already includes QR code as header image
-    # No need to add media_url as QR is embedded in template
-    
-    try:
-        response = requests.get(url, params=params, timeout=10)
-        
-        # Debug logging for template 4986
-        print(f"DEBUG 4986: URL: {url}")
-        print(f"DEBUG 4986: Full URL: {response.url}")
-        print(f"DEBUG 4986: Params: {params}")
-        print(f"DEBUG 4986: Status: {response.status_code}")
-        print(f"DEBUG 4986: Response: {response.text}")
-        print(f"DEBUG 4986: Request Headers: {response.request.headers}")
-        
-        if response.status_code == 200:
-            try:
-                result = response.json()
-                print(f"DEBUG 4986: JSON Result: {result}")
-                
-                if result.get('return') == True:
-                    return True, "WhatsApp reminder with payment options sent successfully"
-                else:
-                    error_msg = result.get('message', result.get('error', 'Unknown API error'))
-                    return False, f"Template 4986 Error: {error_msg}"
-            except:
-                return False, f"Invalid JSON response: {response.text}"
-        else:
-            return False, f"HTTP {response.status_code}: {response.text}"
-    except Exception as e:
-        print(f"DEBUG 4986: Exception occurred: {str(e)}")
         return False, f"Network Error: {str(e)}"
 
 def send_payment_receipt_email(student_email, student_name, amount, receipt_number, plan, student_id=None, instrument=None, start_date=None, expiry_date=None, payment_method="Cash Payment", next_due_date=None):
