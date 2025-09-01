@@ -104,14 +104,13 @@ def send_whatsapp_reminder(mobile, student_name, plan, expiry_date, include_qr=T
     except:
         expiry_date_formatted = str(expiry_date)
     
-    # Using Fast2SMS template 3004 + add UPI info in variables
-    # Add UPI payment info to the plan variable
-    plan_with_upi = f"{plan}\n\n💰 Pay via UPI: 7702031818\n📱 Any UPI app (GPay, PhonePe, Paytm)"
-    variables = f"{student_name}|{plan_with_upi}|{expiry_date_formatted}"
+    # Using Fast2SMS template 4986 (chords_payment_reminder_upi)
+    # Template includes UPI + Bank details built-in
+    variables = f"{student_name}|{plan}|{expiry_date_formatted}"
     
     params = {
         "authorization": FAST2SMS_API_KEY,
-        "message_id": "3004",
+        "message_id": "4986",
         "numbers": mobile,
         "variables_values": variables,
         "sender_id": "CHORDS"
@@ -127,7 +126,7 @@ def send_whatsapp_reminder(mobile, student_name, plan, expiry_date, include_qr=T
             try:
                 result = response.json()
                 if result.get('return') == True:
-                    return True, "WhatsApp reminder sent successfully"
+                    return True, "WhatsApp reminder with payment options sent successfully"
                 else:
                     error_msg = result.get('message', result.get('error', 'Unknown API error'))
                     return False, f"API Error: {error_msg}"
