@@ -104,13 +104,22 @@ def send_whatsapp_reminder(mobile, student_name, plan, expiry_date, include_qr=T
     except:
         expiry_date_formatted = str(expiry_date)
     
-    # Using Fast2SMS template 4986 (chords_payment_reminder_upi)
-    # Template includes UPI + Bank details built-in
+    # Using Fast2SMS template 4986 with fallback to 3004
     variables = f"{student_name}|{plan}|{expiry_date_formatted}"
     
-    params = {
+    # Try template 4986 first
+    params_4986 = {
         "authorization": FAST2SMS_API_KEY,
         "message_id": "4986",
+        "numbers": mobile,
+        "variables_values": variables,
+        "sender_id": "CHORDS"
+    }
+    
+    # Fallback to template 3004
+    params_3004 = {
+        "authorization": FAST2SMS_API_KEY,
+        "message_id": "3004",
         "numbers": mobile,
         "variables_values": variables,
         "sender_id": "CHORDS"
@@ -120,7 +129,8 @@ def send_whatsapp_reminder(mobile, student_name, plan, expiry_date, include_qr=T
     # No need to add media_url as QR is embedded in template
     
     try:
-        response = requests.get(url, params=params, timeout=10)
+        # Try template 4986 first
+        response = requests.get(url, params=params_4986, timeout=10)
         
         if response.status_code == 200:
             try:
@@ -128,8 +138,14 @@ def send_whatsapp_reminder(mobile, student_name, plan, expiry_date, include_qr=T
                 if result.get('return') == True:
                     return True, "WhatsApp reminder with payment options sent successfully"
                 else:
-                    error_msg = result.get('message', result.get('error', 'Unknown API error'))
-                    return False, f"API Error: {error_msg}"
+                    # 4986 failed, try 3004 fallback
+                    print(f"Template 4986 failed: {result.get('message', 'Unknown')}")
+                    fallback_response = requests.get(url, params=params_3004, timeout=10)
+                    if fallback_response.status_code == 200:
+                        fallback_result = fallback_response.json()
+                        if fallback_result.get('return') == True:
+                            return True, "WhatsApp reminder sent successfully (fallback)"
+                    return False, f"Both templates failed: 4986: {result.get('message', 'Unknown')}"
             except:
                 return False, f"Invalid JSON response: {response.text}"
         else:
