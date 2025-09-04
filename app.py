@@ -692,7 +692,11 @@ def payment_module():
         else:  # Due/Overdue Students Only
             from datetime import timedelta
             next_7_days = datetime.now() + timedelta(days=7)
-            df = df[(df['Status'] == 'Expired') | (pd.to_datetime(df['Expiry Date']) <= next_7_days)]
+            try:
+                df = df[(df['Status'] == 'Expired') | (pd.to_datetime(df['Expiry Date'], errors='coerce') <= next_7_days)]
+            except Exception as e:
+                st.error(f"Date parsing error: {str(e)}")
+                df = df[df['Status'] == 'Expired']  # Fallback to only expired students
             
             if df.empty:
                 st.success("🎉 No students have due or overdue payments!")
@@ -958,10 +962,11 @@ def payment_module():
         from datetime import timedelta
         next_7_days = datetime.now() + timedelta(days=7)
         
-        # Safe date conversion
+        # Safe date conversion with null handling
         try:
             valid_dates = pd.to_datetime(all_df['Expiry Date'], errors='coerce')
-            due_soon = len(all_df[valid_dates <= next_7_days])
+            valid_dates = valid_dates.dropna()  # Remove invalid dates
+            due_soon = len(all_df[valid_dates <= next_7_days]) if not valid_dates.empty else 0
         except:
             due_soon = 0
         
