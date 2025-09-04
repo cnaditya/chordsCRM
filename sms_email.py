@@ -33,8 +33,8 @@ def send_whatsapp_reminder(mobile, student_name, plan, expiry_date, include_qr=F
     except:
         expiry_date_formatted = str(expiry_date)
     
-    # Choose template dynamically
-    message_id = "4899" if include_qr else "3004"  # Use 3004 as primary
+    # Use new approved template 5170
+    message_id = "5170"  # Fee reminder with UPI + Bank details
     
     # Build variables string - no empty values
     variables = f"{student_name}|{plan}|{expiry_date_formatted}"
@@ -109,7 +109,7 @@ def send_whatsapp_payment_receipt(mobile, student_name, amount, receipt_no, plan
     }
     
     params = {
-        "message_id": "4587",
+        "message_id": "5171",
         "numbers": mobile,
         "variables_values": variables
     }
@@ -140,7 +140,7 @@ def test_fast2sms():
     }
     
     params = {
-        "message_id": "3004",
+        "message_id": "5170",
         "numbers": "917702031818",
         "variables_values": "Test|Package|01-01-2025"
     }
