@@ -84,14 +84,19 @@ def test_fast2sms():
     """Test function to check Fast2SMS connectivity"""
     print("TESTING Fast2SMS connectivity...")
     url = "https://www.fast2sms.com/dev/whatsapp"
+    
+    headers = {
+        "authorization": FAST2SMS_API_KEY
+    }
+    
     params = {
-        "authorization": FAST2SMS_API_KEY,
-        "message_id": "4986",
+        "message_id": "3004",
         "numbers": "917702031818",
         "variables_values": "Test|Package|01-01-2025"
     }
+    
     try:
-        response = requests.get(url, params=params, timeout=10)
+        response = requests.get(url, headers=headers, params=params, timeout=10)
         print(f"TEST: Status: {response.status_code}")
         print(f"TEST: Response: {response.text}")
         print(f"TEST: Full URL: {response.url}")
