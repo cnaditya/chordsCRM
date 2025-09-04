@@ -1,36 +1,29 @@
 import requests
 import smtplib
+import os
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from datetime import datetime
 
-FAST2SMS_API_KEY = "6TDScuetHNniG5F92kswhvrLJx4IAVRjpoZUb1Y83CzBl0WEd7RLDaifTQwBqekSC2vnMz583p4lKsdX"
+# Use environment variable for API key (fallback to hardcoded for now)
+FAST2SMS_API_KEY = os.getenv("FAST2SMS_API_KEY", "6TDScuetHNniG5F92kswhvrLJx4IAVRjpoZUb1Y83CzBl0WEd7RLDaifTQwBqekSC2vnMz583p4lKsdX")
 
-def send_whatsapp_reminder(mobile, student_name, plan, expiry_date, include_qr=True):
-    """Send WhatsApp reminder using Fast2SMS template 4986 - FIXED VERSION"""
+def send_whatsapp_reminder(mobile, student_name, plan, expiry_date, include_qr=False):
+    """Send WhatsApp reminder using Fast2SMS template - FINAL CLEAN VERSION"""
     
     print(f"FUNCTION CALLED: send_whatsapp_reminder for {student_name} at {mobile}")
     
-    # Clean and format mobile number
+    # Clean and normalize mobile number
     mobile = str(mobile).replace(" ", "").replace("-", "").replace("(", "").replace(")", "")
-    
-    # Add country code if not present
-    if mobile.startswith("+"):
-        mobile = mobile[1:]
-    elif mobile.startswith("91") and len(mobile) == 12:
-        pass
-    elif len(mobile) == 10 and mobile.isdigit():
+    if len(mobile) == 10 and mobile.isdigit():
         mobile = "91" + mobile
-    elif not mobile.isdigit():
+    elif mobile.startswith("+"):
+        mobile = mobile[1:]
+    
+    if not mobile.isdigit() or len(mobile) < 10:
         return False, f"Invalid mobile number format: {mobile}"
     
-    # Validate final format
-    if len(mobile) < 10 or len(mobile) > 15 or not mobile.isdigit():
-        return False, f"Invalid mobile number: {mobile}. Must be 10-15 digits with country code."
-    
-    url = "https://www.fast2sms.com/dev/whatsapp"
-    
-    # Format date to dd-mm-yyyy
+    # Format date YYYY-MM-DD → DD-MM-YYYY
     if " 00:00:00" in str(expiry_date):
         expiry_date = str(expiry_date).replace(" 00:00:00", "")
     
@@ -40,92 +33,61 @@ def send_whatsapp_reminder(mobile, student_name, plan, expiry_date, include_qr=T
     except:
         expiry_date_formatted = str(expiry_date)
     
-    # Template parameters - API key in headers
+    # Choose template dynamically
+    message_id = "4899" if include_qr else "3004"  # Use 3004 as primary
+    
+    # Build variables string - no empty values
     variables = f"{student_name}|{plan}|{expiry_date_formatted}"
     
-    headers = {
-        "authorization": FAST2SMS_API_KEY
-    }
+    url = "https://www.fast2sms.com/dev/whatsapp"
     
+    # API key in query params (as per your Excel sheet)
     params = {
-        "message_id": "3004",
+        "authorization": FAST2SMS_API_KEY,
+        "message_id": message_id,
         "numbers": mobile,
         "variables_values": variables
     }
     
     try:
-        response = requests.get(url, headers=headers, params=params, timeout=10)
+        response = requests.get(url, params=params, timeout=10)
         
-        print(f"DEBUG 4986: URL: {url}")
-        print(f"DEBUG 4986: Full URL: {response.url}")
-        print(f"DEBUG 4986: Params: {params}")
-        print(f"DEBUG 4986: Status: {response.status_code}")
-        print(f"DEBUG 4986: Response: {response.text}")
+        # Debug logging
+        print(f"DEBUG {message_id}: URL={url}")
+        print(f"DEBUG {message_id}: No sender_id sent")
+        print(f"DEBUG {message_id}: Params={params}")
+        print(f"DEBUG {message_id}: Status={response.status_code}")
+        print(f"DEBUG {message_id}: Response={response.text}")
         
         if response.status_code == 200:
             try:
                 result = response.json()
-                print(f"DEBUG 4986: JSON Result: {result}")
-                
                 if result.get('return') == True:
-                    return True, "WhatsApp reminder with payment options sent successfully"
+                    return True, f"WhatsApp reminder sent successfully (Template {message_id})"
                 else:
-                    error_msg = result.get('message', result.get('error', f'Unknown error - Raw JSON: {result}'))
-                    return False, f"Template 4986 Error: {error_msg}"
+                    error_msg = result.get('message', result.get('error', f'API Error: {result}'))
+                    return False, f"Template {message_id} Error: {error_msg}"
             except:
                 return False, f"Invalid JSON response: {response.text}"
         else:
             return False, f"HTTP {response.status_code}: {response.text}"
+    
     except Exception as e:
-        print(f"DEBUG 4986: Exception occurred: {str(e)}")
+        print(f"DEBUG {message_id}: Exception: {str(e)}")
         return False, f"Network Error: {str(e)}"
 
-def test_fast2sms():
-    """Test function to check Fast2SMS connectivity"""
-    print("TESTING Fast2SMS connectivity...")
-    url = "https://www.fast2sms.com/dev/whatsapp"
-    
-    headers = {
-        "authorization": FAST2SMS_API_KEY
-    }
-    
-    params = {
-        "message_id": "3004",
-        "numbers": "917702031818",
-        "variables_values": "Test|Package|01-01-2025"
-    }
-    
-    try:
-        response = requests.get(url, headers=headers, params=params, timeout=10)
-        print(f"TEST: Status: {response.status_code}")
-        print(f"TEST: Response: {response.text}")
-        print(f"TEST: Full URL: {response.url}")
-        return response.status_code, response.text
-    except Exception as e:
-        print(f"TEST: Error: {e}")
-        return None, str(e)
-
-# Keep other functions unchanged
 def send_whatsapp_payment_receipt(mobile, student_name, amount, receipt_no, plan, payment_date, next_due_info):
-    """Send WhatsApp payment receipt using Fast2SMS template 4587"""
+    """Send WhatsApp payment receipt using template 4587"""
     
-    # Clean and format mobile number for international support
+    # Clean mobile number
     mobile = str(mobile).replace(" ", "").replace("-", "").replace("(", "").replace(")", "")
-    
-    # Add country code if not present
-    if mobile.startswith("+"):
-        mobile = mobile[1:]
-    elif mobile.startswith("91") and len(mobile) == 12:
-        pass
-    elif len(mobile) == 10 and mobile.isdigit():
+    if len(mobile) == 10 and mobile.isdigit():
         mobile = "91" + mobile
-    elif not mobile.isdigit():
+    elif mobile.startswith("+"):
+        mobile = mobile[1:]
+    
+    if not mobile.isdigit() or len(mobile) < 10:
         return False, f"Invalid mobile number format: {mobile}"
-    
-    if len(mobile) < 10 or len(mobile) > 15 or not mobile.isdigit():
-        return False, f"Invalid mobile number: {mobile}. Must be 10-15 digits with country code."
-    
-    url = "https://www.fast2sms.com/dev/whatsapp"
     
     # Format payment date
     try:
@@ -134,9 +96,10 @@ def send_whatsapp_payment_receipt(mobile, student_name, amount, receipt_no, plan
     except:
         payment_date_formatted = str(payment_date)
     
-    # Using Fast2SMS template 4587 (payment_receipt)
-    # Variables: student_name, amount, receipt_no, plan, payment_date, next_due_info
+    # Template 4587 variables (6 variables)
     variables = f"{student_name}|{amount}|{receipt_no}|{plan}|{payment_date_formatted}|{next_due_info}"
+    
+    url = "https://www.fast2sms.com/dev/whatsapp"
     
     headers = {
         "authorization": FAST2SMS_API_KEY
@@ -152,22 +115,46 @@ def send_whatsapp_payment_receipt(mobile, student_name, amount, receipt_no, plan
         response = requests.get(url, headers=headers, params=params, timeout=10)
         
         if response.status_code == 200:
-            try:
-                result = response.json()
-                if result.get('return') == True:
-                    return True, "WhatsApp receipt sent successfully"
-                else:
-                    error_msg = result.get('message', result.get('error', 'Unknown API error'))
-                    return False, f"API Error: {error_msg}"
-            except:
-                return False, f"Invalid JSON response: {response.text}"
+            result = response.json()
+            if result.get('return') == True:
+                return True, "WhatsApp receipt sent successfully"
+            else:
+                return False, f"API Error: {result.get('message', 'Unknown error')}"
         else:
             return False, f"HTTP {response.status_code}: {response.text}"
+    
     except Exception as e:
         return False, f"Network Error: {str(e)}"
 
+def test_fast2sms():
+    """Test Fast2SMS API with clean parameters"""
+    print("TESTING Fast2SMS API...")
+    
+    url = "https://www.fast2sms.com/dev/whatsapp"
+    
+    headers = {
+        "authorization": FAST2SMS_API_KEY
+    }
+    
+    params = {
+        "message_id": "3004",
+        "numbers": "917702031818",
+        "variables_values": "Test|Package|01-01-2025"
+    }
+    
+    try:
+        response = requests.get(url, headers=headers, params=params, timeout=10)
+        print(f"TEST: Status={response.status_code}")
+        print(f"TEST: Response={response.text}")
+        print(f"TEST: Headers={headers}")
+        print(f"TEST: Params={params}")
+        return response.status_code, response.text
+    except Exception as e:
+        print(f"TEST: Error={e}")
+        return None, str(e)
+
 def send_payment_receipt_email(student_email, student_name, amount, receipt_number, plan, student_id=None, instrument=None, start_date=None, expiry_date=None, payment_method="Cash Payment", next_due_date=None):
-    """Send payment receipt via Gmail SMTP using professional template"""
+    """Send payment receipt via Gmail SMTP"""
     sender_email = "chords.music.academy@gmail.com"
     sender_password = "xdiu rhua fhpc zwrk"
     
