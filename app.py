@@ -918,9 +918,9 @@ def payment_module():
                     
                     with col3:
                         if st.button("📱 WhatsApp Receipt", use_container_width=True, key=f"whatsapp_pay_{student['Student ID']}"):
-                            with st.spinner("📱 Sending WhatsApp..."):
-                                next_due_info = f"Next Due: {next_payment_due.strftime('%d-%m-%Y')}" if next_payment_due else "🎉 Fully Paid - No Dues!"
-                                try:
+                            if amount > 0:
+                                with st.spinner("📱 Sending WhatsApp..."):
+                                    next_due_info = f"Next Due: {next_payment_due.strftime('%d-%m-%Y')}" if next_payment_due else "🎉 Fully Paid - No Dues!"
                                     whatsapp_success, whatsapp_message = send_whatsapp_payment_receipt(
                                         student['Mobile'], student['Full Name'],
                                         amount, receipt_no, student['Class Plan'],
@@ -930,8 +930,8 @@ def payment_module():
                                         st.success("✅ WhatsApp receipt sent!")
                                     else:
                                         st.error(f"❌ WhatsApp failed: {whatsapp_message}")
-                                except Exception as e:
-                                    st.error(f"❌ WhatsApp error: {str(e)}")
+                            else:
+                                st.error("⚠️ Please enter payment amount first")
     else:
         st.info("📅 No students registered yet.")
         
