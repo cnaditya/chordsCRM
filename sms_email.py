@@ -83,7 +83,7 @@ def test_fast2sms():
     url = "https://www.fast2sms.com/dev/whatsapp"
     params = {
         "authorization": FAST2SMS_API_KEY,
-        "message_id": "3004",
+        "message_id": "4986",
         "numbers": "917702031818",
         "variables_values": "Test|Package|01-01-2025"
     }
@@ -135,7 +135,7 @@ def send_whatsapp_payment_receipt(mobile, student_name, amount, receipt_no, plan
         "message_id": "4587",
         "numbers": mobile,
         "variables_values": variables,
-        "sender_id": "CHORDS"
+
     }
     
     try:
