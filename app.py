@@ -1596,4 +1596,4 @@ def main():
         # Security page removed
 
 if __name__ == "__main__":
-    main()st.cache_data.clear()
+    main()
