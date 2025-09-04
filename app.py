@@ -894,7 +894,7 @@ def payment_module():
                                 st.error("⚠️ Please enter payment amount")
                     
                     with col2:
-                        if st.button("📧 Email Receipt", use_container_width=True, key=f"email_{student['Student ID']}"):
+                        if st.button("📧 Email Receipt", use_container_width=True, key=f"email_pay_{student['Student ID']}"):
                             if student_email:
                                 with st.spinner("📧 Sending email..."):
                                     next_due_str = next_payment_due.strftime('%Y-%m-%d') if next_payment_due else None
@@ -913,7 +913,7 @@ def payment_module():
                                 st.error("⚠️ Please enter email address")
                     
                     with col3:
-                        if st.button("📱 WhatsApp Receipt", use_container_width=True, key=f"whatsapp_{student['Student ID']}"):
+                        if st.button("📱 WhatsApp Receipt", use_container_width=True, key=f"whatsapp_pay_{student['Student ID']}"):
                             with st.spinner("📱 Sending WhatsApp..."):
                                 next_due_info = f"Next Due: {next_payment_due.strftime('%d-%m-%Y')}" if next_payment_due else "🎉 Fully Paid - No Dues!"
                                 try:
