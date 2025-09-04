@@ -137,8 +137,6 @@ Thank you for your payment to Chords Music Academy. We have successfully receive
 - Course/Instrument: {instrument or 'N/A'}
 - No. of Classes: {num_classes}
 - Class Type: Offline
-- Start Date: {start_date_formatted}
-- End Date: {expiry_date_formatted}
 - 🗓️ Next Due Date: {format_date(next_due_date) if next_due_date else '🎉 NO DUES - FULLY PAID'}
 
 ---
