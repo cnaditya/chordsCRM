@@ -1072,10 +1072,17 @@ def student_list_module():
                 with col3:
                     st.markdown("**📅 Dates**")
                     start_date = str(student['Start Date']).split(' ')[0]
-                    st.text(f"Start: {pd.to_datetime(start_date).strftime('%d-%m-%Y')}")
+                    try:
+                        st.text(f"Start: {pd.to_datetime(start_date).strftime('%d-%m-%Y')}")
+                    except:
+                        st.text(f"Start: {start_date}")
+                    
                     if student['Class Plan'] != 'No Package':
                         expiry_date = str(student['Expiry Date']).split(' ')[0]
-                        st.text(f"Expiry: {pd.to_datetime(expiry_date).strftime('%d-%m-%Y')}")
+                        try:
+                            st.text(f"Expiry: {pd.to_datetime(expiry_date).strftime('%d-%m-%Y')}")
+                        except:
+                            st.text(f"Expiry: {expiry_date}")
                     else:
                         st.text("Expiry: No Package")
                 
