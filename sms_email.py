@@ -78,22 +78,29 @@ def send_whatsapp_payment_receipt(mobile, student_name, amount, receipt_no, plan
     except:
         payment_date_formatted = str(payment_date)
     
-    # Template 5171: student_name|amount|receipt_no|plan|payment_date|next_due_info
-    variables_list = [student_name, str(amount), receipt_no, plan, payment_date_formatted, next_due_info]
+    # Template 5171: student_name|amount|receipt_no|payment_date|next_due_info
+    variables_list = [student_name, str(amount), receipt_no, payment_date_formatted, next_due_info]
     
     print(f"RECEIPT VARIABLES: {variables_list}")
+    print(f"MOBILE: {mobile}")
     
-    return send_whatsapp("payment_receipt", mobile, variables_list)
+    result = send_whatsapp("payment_receipt", mobile, variables_list)
+    print(f"WHATSAPP RESULT: {result}")
+    return result
 
 def test_fast2sms():
     """Test Fast2SMS API"""
     print("TESTING Fast2SMS API...")
     
-    # Test fee reminder
-    success, message = send_whatsapp(
-        template="fee_reminder",
+    # Test payment receipt
+    success, message = send_whatsapp_payment_receipt(
         mobile="7702031818",
-        variables_list=["Test", "Package", "01-09-2025"]
+        student_name="Test Student",
+        amount=1000,
+        receipt_no="CMA00001",
+        plan="1 Month - 8",
+        payment_date="2024-01-15",
+        next_due_info="Next Due: 15-02-2024"
     )
     
     print(f"Test Result: {success}")
