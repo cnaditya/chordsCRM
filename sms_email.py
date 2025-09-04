@@ -45,7 +45,7 @@ def send_whatsapp_reminder(mobile, student_name, plan, expiry_date, include_qr=T
     
     params = {
         "authorization": FAST2SMS_API_KEY,
-        "message_id": "4986",
+        "message_id": "3004",
         "numbers": mobile,
         "variables_values": variables
     }
