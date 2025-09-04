@@ -928,11 +928,13 @@ def payment_module():
                                 conn.close()
                                 
                                 next_due_info = f"Next Due: {next_payment_due.strftime('%d-%m-%Y')}" if next_payment_due else "🎉 Fully Paid - No Dues!"
+                                st.write(f"DEBUG: Sending to {student['Mobile']}, Amount: {amount}, Receipt: {receipt_no}")
                                 whatsapp_success, whatsapp_message = send_whatsapp_payment_receipt(
                                     student['Mobile'], student['Full Name'],
                                     amount, receipt_no, student['Class Plan'],
                                     datetime.now().strftime('%Y-%m-%d'), next_due_info
                                 )
+                                st.write(f"DEBUG: WhatsApp result: {whatsapp_success}, Message: {whatsapp_message}")
                                 
                                 if whatsapp_success:
                                     st.success(f"✅ Payment ₹{amount} recorded & WhatsApp sent! Receipt: {receipt_no}")
