@@ -1534,24 +1534,24 @@ def due_alerts_module():
     st.markdown("---")
     st.markdown("### 🔧 Debug WhatsApp")
     
-    col1, col2 = st.columns(2)
-    with col1:
-        if st.button("🧪 Test WhatsApp API"):
-            from sms_email import test_fast2sms
-            status, response = test_fast2sms()
-            st.write(f"Status: {status}")
-            st.write(f"Response: {response}")
+    st.button("🧪 Test WhatsApp API", key="btn1")
+    st.button("📱 Test WhatsApp Receipt", key="btn2")
     
-    with col2:
-        if st.button("📱 Test WhatsApp Receipt"):
-            success, message = send_whatsapp_payment_receipt(
-                "7702031818", "Test Student", 1000, "CMA00001", 
-                "1 Month - 8", datetime.now().strftime('%Y-%m-%d'), "Next Due: 01-10-2024"
-            )
-            if success:
-                st.success(f"✅ Test successful: {message}")
-            else:
-                st.error(f"❌ Test failed: {message}")
+    if st.session_state.get("btn1"):
+        from sms_email import test_fast2sms
+        status, response = test_fast2sms()
+        st.write(f"Status: {status}")
+        st.write(f"Response: {response}")
+    
+    if st.session_state.get("btn2"):
+        success, message = send_whatsapp_payment_receipt(
+            "7702031818", "Test Student", 1000, "CMA00001", 
+            "1 Month - 8", datetime.now().strftime('%Y-%m-%d'), "Next Due: 01-10-2024"
+        )
+        if success:
+            st.success(f"✅ Test successful: {message}")
+        else:
+            st.error(f"❌ Test failed: {message}")
     
     if st.button("← Back to Dashboard"):
         st.session_state.page = "dashboard"
@@ -1596,4 +1596,4 @@ def main():
         # Security page removed
 
 if __name__ == "__main__":
-    main()
+    main()st.cache_data.clear()
