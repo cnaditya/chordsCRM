@@ -5,25 +5,53 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from datetime import datetime
 
-# Use environment variable for API key (fallback to hardcoded for now)
-FAST2SMS_API_KEY = os.getenv("FAST2SMS_API_KEY", "uC9zfouowPaNrHpOtk5hnVSYiSE9oiihlA7Lld1tBKd49RuUdQusN45x0oPX")
+FAST2SMS_API_KEY = "uC9zfouowPaNrHpOtk5hnVSYiSE9oiihlA7Lld1tBKd49RuUdQusN45x0oPX"
+
+def send_whatsapp(template, mobile, variables_list):
+    """Clean WhatsApp function following exact Fast2SMS format"""
+    url = "https://www.fast2sms.com/dev/whatsapp"
+    headers = {"authorization": FAST2SMS_API_KEY}
+
+    template_map = {
+        "fee_reminder": "5170",
+        "payment_receipt": "5171"
+    }
+
+    message_id = template_map.get(template)
+    if not message_id:
+        return False, f"Unknown template: {template}"
+
+    # Clean mobile number
+    mobile = str(mobile).replace(" ", "").replace("-", "").replace("(", "").replace(")", "")
+    if len(mobile) == 10:
+        mobile = "91" + mobile
+
+    variables_values = "|".join(variables_list)
+    params = {
+        "message_id": message_id,
+        "numbers": mobile,
+        "variables_values": variables_values
+    }
+
+    try:
+        response = requests.get(url, headers=headers, params=params, timeout=10)
+        print(f"DEBUG: Status={response.status_code}, Response={response.text}")
+        
+        if response.status_code == 200:
+            result = response.json()
+            if result.get("return") is True:
+                return True, f"WhatsApp {template} sent successfully"
+            else:
+                return False, f"API error: {result}"
+        else:
+            return False, f"HTTP {response.status_code}: {response.text}"
+    except Exception as e:
+        return False, f"Network error: {str(e)}"
 
 def send_whatsapp_reminder(mobile, student_name, plan, expiry_date, include_qr=False):
-    """Send WhatsApp reminder using Fast2SMS template - FINAL CLEAN VERSION"""
+    """Send fee reminder using template 5170"""
     
-    print(f"FUNCTION CALLED: send_whatsapp_reminder for {student_name} at {mobile}")
-    
-    # Clean and normalize mobile number
-    mobile = str(mobile).replace(" ", "").replace("-", "").replace("(", "").replace(")", "")
-    if len(mobile) == 10 and mobile.isdigit():
-        mobile = "91" + mobile
-    elif mobile.startswith("+"):
-        mobile = mobile[1:]
-    
-    if not mobile.isdigit() or len(mobile) < 10:
-        return False, f"Invalid mobile number format: {mobile}"
-    
-    # Format date YYYY-MM-DD → DD-MM-YYYY
+    # Format date to dd-mm-yyyy
     if " 00:00:00" in str(expiry_date):
         expiry_date = str(expiry_date).replace(" 00:00:00", "")
     
@@ -33,64 +61,13 @@ def send_whatsapp_reminder(mobile, student_name, plan, expiry_date, include_qr=F
     except:
         expiry_date_formatted = str(expiry_date)
     
-    # Use new approved template 5170
-    message_id = "5170"  # Fee reminder with UPI + Bank details
+    # Template 5170: student_name|plan|expiry_date
+    variables_list = [student_name, plan, expiry_date_formatted]
     
-    # Build variables string - no empty values
-    variables = f"{student_name}|{plan}|{expiry_date_formatted}"
-    
-    url = "https://www.fast2sms.com/dev/whatsapp"
-    
-    # API key in headers (correct placement)
-    headers = {
-        "authorization": FAST2SMS_API_KEY
-    }
-    
-    params = {
-        "message_id": message_id,
-        "numbers": mobile,
-        "variables_values": variables
-    }
-    
-    try:
-        response = requests.get(url, headers=headers, params=params, timeout=10)
-        
-        # Debug logging
-        print(f"DEBUG {message_id}: URL={url}")
-        print(f"DEBUG {message_id}: Headers={headers}")
-        print(f"DEBUG {message_id}: Params={params}")
-        print(f"DEBUG {message_id}: Status={response.status_code}")
-        print(f"DEBUG {message_id}: Response={response.text}")
-        
-        if response.status_code == 200:
-            try:
-                result = response.json()
-                if result.get('return') == True:
-                    return True, f"WhatsApp reminder sent successfully (Template {message_id})"
-                else:
-                    error_msg = result.get('message', result.get('error', f'API Error: {result}'))
-                    return False, f"Template {message_id} Error: {error_msg}"
-            except:
-                return False, f"Invalid JSON response: {response.text}"
-        else:
-            return False, f"HTTP {response.status_code}: {response.text}"
-    
-    except Exception as e:
-        print(f"DEBUG {message_id}: Exception: {str(e)}")
-        return False, f"Network Error: {str(e)}"
+    return send_whatsapp("fee_reminder", mobile, variables_list)
 
 def send_whatsapp_payment_receipt(mobile, student_name, amount, receipt_no, plan, payment_date, next_due_info):
-    """Send WhatsApp payment receipt using template 4587"""
-    
-    # Clean mobile number
-    mobile = str(mobile).replace(" ", "").replace("-", "").replace("(", "").replace(")", "")
-    if len(mobile) == 10 and mobile.isdigit():
-        mobile = "91" + mobile
-    elif mobile.startswith("+"):
-        mobile = mobile[1:]
-    
-    if not mobile.isdigit() or len(mobile) < 10:
-        return False, f"Invalid mobile number format: {mobile}"
+    """Send payment receipt using template 5171"""
     
     # Format payment date
     try:
@@ -99,62 +76,25 @@ def send_whatsapp_payment_receipt(mobile, student_name, amount, receipt_no, plan
     except:
         payment_date_formatted = str(payment_date)
     
-    # Template 4587 variables (6 variables)
-    variables = f"{student_name}|{amount}|{receipt_no}|{plan}|{payment_date_formatted}|{next_due_info}"
+    # Template 5171: student_name|amount|receipt_no|plan|payment_date|next_due_info
+    variables_list = [student_name, str(amount), receipt_no, plan, payment_date_formatted, next_due_info]
     
-    url = "https://www.fast2sms.com/dev/whatsapp"
-    
-    headers = {
-        "authorization": FAST2SMS_API_KEY
-    }
-    
-    params = {
-        "message_id": "5171",
-        "numbers": mobile,
-        "variables_values": variables
-    }
-    
-    try:
-        response = requests.get(url, headers=headers, params=params, timeout=10)
-        
-        if response.status_code == 200:
-            result = response.json()
-            if result.get('return') == True:
-                return True, "WhatsApp receipt sent successfully"
-            else:
-                return False, f"API Error: {result.get('message', 'Unknown error')}"
-        else:
-            return False, f"HTTP {response.status_code}: {response.text}"
-    
-    except Exception as e:
-        return False, f"Network Error: {str(e)}"
+    return send_whatsapp("payment_receipt", mobile, variables_list)
 
 def test_fast2sms():
-    """Test Fast2SMS API with clean parameters"""
+    """Test Fast2SMS API"""
     print("TESTING Fast2SMS API...")
     
-    url = "https://www.fast2sms.com/dev/whatsapp"
+    # Test fee reminder
+    success, message = send_whatsapp(
+        template="fee_reminder",
+        mobile="7702031818",
+        variables_list=["Test", "Package", "01-09-2025"]
+    )
     
-    headers = {
-        "authorization": FAST2SMS_API_KEY
-    }
-    
-    params = {
-        "message_id": "5170",
-        "numbers": "917702031818",
-        "variables_values": "Test|Package|01-01-2025"
-    }
-    
-    try:
-        response = requests.get(url, headers=headers, params=params, timeout=10)
-        print(f"TEST: Status={response.status_code}")
-        print(f"TEST: Response={response.text}")
-        print(f"TEST: Headers={headers}")
-        print(f"TEST: Params={params}")
-        return response.status_code, response.text
-    except Exception as e:
-        print(f"TEST: Error={e}")
-        return None, str(e)
+    print(f"Test Result: {success}")
+    print(f"Message: {message}")
+    return 200 if success else 400, message
 
 def send_payment_receipt_email(student_email, student_name, amount, receipt_number, plan, student_id=None, instrument=None, start_date=None, expiry_date=None, payment_method="Cash Payment", next_due_date=None):
     """Send payment receipt via Gmail SMTP"""
