@@ -906,11 +906,17 @@ def payment_module():
                                 
                                 # Send WhatsApp Receipt
                                 next_due_info = f"Next Due: {next_payment_due.strftime('%d-%m-%Y')}" if next_payment_due else "🎉 Fully Paid - No Dues!"
-                                whatsapp_success, whatsapp_message = send_whatsapp_payment_receipt(
-                                    student['Mobile'], student['Full Name'],
-                                    amount, receipt_no, student['Class Plan'],
-                                    datetime.now().strftime('%Y-%m-%d'), next_due_info
-                                )
+                                print(f"CALLING WhatsApp receipt function...")
+                                try:
+                                    whatsapp_success, whatsapp_message = send_whatsapp_payment_receipt(
+                                        student['Mobile'], student['Full Name'],
+                                        amount, receipt_no, student['Class Plan'],
+                                        datetime.now().strftime('%Y-%m-%d'), next_due_info
+                                    )
+                                    print(f"WhatsApp result: {whatsapp_success}, {whatsapp_message}")
+                                except Exception as e:
+                                    print(f"WhatsApp exception: {e}")
+                                    whatsapp_success, whatsapp_message = False, f"Exception: {e}"
                                 
                                 # Show results
                                 if email_success and whatsapp_success:
