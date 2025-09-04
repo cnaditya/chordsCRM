@@ -78,8 +78,8 @@ def send_whatsapp_payment_receipt(mobile, student_name, amount, receipt_no, plan
     except:
         payment_date_formatted = str(payment_date)
     
-    # Template 5171: student_name|amount|receipt_no|payment_date|next_due_info
-    variables_list = [student_name, str(amount), receipt_no, payment_date_formatted, next_due_info]
+    # Template 5171: student_name|amount|receipt_no|plan|payment_date|next_due_info
+    variables_list = [student_name, str(amount), receipt_no, plan, payment_date_formatted, next_due_info]
     
     print(f"RECEIPT VARIABLES: {variables_list}")
     print(f"MOBILE: {mobile}")
