@@ -1483,9 +1483,9 @@ def due_alerts_module():
     students = get_all_students()
     if students:
         df = pd.DataFrame(students, columns=[
-            'ID', 'Student ID', 'Full Name', 'Age', 'Mobile', 'Instrument', 'Class Plan', 
-            'Total Classes', 'Start Date', 'Expiry Date', 'Status', 'Classes Completed', 
-            'Extra Classes', 'First Class Date', 'Email', 'Date of Birth', 'Sex'
+            'ID', 'Student ID', 'Full Name', 'Age', 'Mobile', 'Email', 'Date of Birth', 'Sex',
+            'Instrument', 'Class Plan', 'Total Classes', 'Start Date', 'Expiry Date', 'Status', 
+            'Classes Completed', 'Extra Classes', 'First Class Date', 'Created At', 'Updated At'
         ])
         
         from datetime import timedelta
