@@ -943,9 +943,17 @@ def payment_module():
             'Classes Completed', 'Extra Classes', 'First Class Date', 'Created At', 'Updated At'
         ])
         all_df['Expiry Date'] = all_df['Expiry Date'].astype(str).str.split(' ').str[0]
-        all_df['Status'] = all_df.apply(lambda row: 
-            'Expired' if datetime.strptime(row['Expiry Date'], '%Y-%m-%d') < datetime.now()
-            else 'Active', axis=1)
+        
+        def get_status_safe(row):
+            try:
+                if row['Expiry Date'] and '-' in str(row['Expiry Date']):
+                    return 'Expired' if datetime.strptime(row['Expiry Date'], '%Y-%m-%d') < datetime.now() else 'Active'
+                else:
+                    return 'Active'
+            except:
+                return 'Active'
+        
+        all_df['Status'] = all_df.apply(get_status_safe, axis=1)
         
         from datetime import timedelta
         next_7_days = datetime.now() + timedelta(days=7)
