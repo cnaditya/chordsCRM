@@ -43,15 +43,18 @@ def send_whatsapp_reminder(mobile, student_name, plan, expiry_date, include_qr=T
     # Template parameters - API key in headers
     variables = f"{student_name}|{plan}|{expiry_date_formatted}"
     
+    headers = {
+        "authorization": FAST2SMS_API_KEY
+    }
+    
     params = {
-        "authorization": FAST2SMS_API_KEY,
         "message_id": "3004",
         "numbers": mobile,
         "variables_values": variables
     }
     
     try:
-        response = requests.get(url, params=params, timeout=10)
+        response = requests.get(url, headers=headers, params=params, timeout=10)
         
         print(f"DEBUG 4986: URL: {url}")
         print(f"DEBUG 4986: Full URL: {response.url}")
