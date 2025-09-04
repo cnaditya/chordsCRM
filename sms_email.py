@@ -10,8 +10,7 @@ FAST2SMS_API_KEY = "uC9zfouowPaNrHpOtk5hnVSYiSE9oiihlA7Lld1tBKd49RuUdQusN45x0oPX
 def send_whatsapp(template, mobile, variables_list):
     """Clean WhatsApp function following exact Fast2SMS format"""
     url = "https://www.fast2sms.com/dev/whatsapp"
-    headers = {"authorization": FAST2SMS_API_KEY}
-
+    
     template_map = {
         "fee_reminder": "5170",
         "payment_receipt": "5171"
@@ -28,13 +27,14 @@ def send_whatsapp(template, mobile, variables_list):
 
     variables_values = "|".join(variables_list)
     params = {
+        "authorization": FAST2SMS_API_KEY,
         "message_id": message_id,
         "numbers": mobile,
         "variables_values": variables_values
     }
 
     try:
-        response = requests.get(url, headers=headers, params=params, timeout=10)
+        response = requests.get(url, params=params, timeout=10)
         print(f"DEBUG: Status={response.status_code}, Response={response.text}")
         
         if response.status_code == 200:
