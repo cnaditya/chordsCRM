@@ -718,7 +718,10 @@ def payment_module():
                         st.metric("Classes Progress", f"{student['Classes Completed']}/{student['Total Classes']}")
                     
                     with col2:
-                        expiry_formatted = datetime.strptime(str(student['Expiry Date']).split(' ')[0], '%Y-%m-%d').strftime('%d-%m-%Y')
+                        try:
+                            expiry_formatted = datetime.strptime(str(student['Expiry Date']).split(' ')[0], '%Y-%m-%d').strftime('%d-%m-%Y')
+                        except:
+                            expiry_formatted = str(student['Expiry Date']).split(' ')[0]
                         st.metric("Expiry Date", expiry_formatted)
                         st.metric("Mobile", student['Mobile'])
                     
