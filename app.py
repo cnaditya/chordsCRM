@@ -1494,7 +1494,7 @@ def due_alerts_module():
         
         # Clean and parse expiry dates
         df['Expiry Date'] = df['Expiry Date'].astype(str).str.split(' ').str[0]  # Remove time part
-        df['Expiry Date Parsed'] = pd.to_datetime(df['Expiry Date'])
+        df['Expiry Date Parsed'] = pd.to_datetime(df['Expiry Date'], errors='coerce')
         
         overdue_df = df[df['Expiry Date Parsed'] < today]
         due_soon_df = df[(df['Expiry Date Parsed'] >= today) & (df['Expiry Date Parsed'] <= next_3_days)]
