@@ -6,7 +6,7 @@ from email.mime.multipart import MIMEMultipart
 from datetime import datetime
 
 # Use environment variable for API key (fallback to hardcoded for now)
-FAST2SMS_API_KEY = os.getenv("FAST2SMS_API_KEY", "6TDScuetHNniG5F92kswhvrLJx4IAVRjpoZUb1Y83CzBl0WEd7RLDaifTQwBqekSC2vnMz583p4lKsdX")
+FAST2SMS_API_KEY = os.getenv("FAST2SMS_API_KEY", "uC9zfouowPaNrHpOtk5hnVSYiSE9oiihlA7Lld1tBKd49RuUdQusN45x0oPX")
 
 def send_whatsapp_reminder(mobile, student_name, plan, expiry_date, include_qr=False):
     """Send WhatsApp reminder using Fast2SMS template - FINAL CLEAN VERSION"""
