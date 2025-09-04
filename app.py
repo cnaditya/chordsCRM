@@ -1529,6 +1529,15 @@ def due_alerts_module():
     else:
         st.info("No students registered yet.")
     
+    # Debug section
+    st.markdown("---")
+    st.markdown("### 🔧 Debug WhatsApp")
+    if st.button("🧪 Test WhatsApp API"):
+        from sms_email import test_fast2sms
+        status, response = test_fast2sms()
+        st.write(f"Status: {status}")
+        st.write(f"Response: {response}")
+    
     if st.button("← Back to Dashboard"):
         st.session_state.page = "dashboard"
         st.rerun()
