@@ -872,67 +872,62 @@ def payment_module():
                     with rcol2:
                         st.info(f"📅 **Package:** {student['Class Plan']}")
                     
-                    # Submit button
-                    if st.button("✅ Process Payment", use_container_width=True, type="primary", key=f"submit_{student['Student ID']}"):
-                        if amount and student_email:
-                            # Update database
-                            conn = sqlite3.connect('chords_crm.db')
-                            cursor = conn.cursor()
-                            # Record payment with next due date (installment or renewal)
-                            next_due_str = next_payment_due.strftime('%Y-%m-%d')
-                            cursor.execute('''
-                                INSERT INTO payments (student_id, amount, payment_date, receipt_number, notes, next_due_date)
-                                VALUES (?, ?, ?, ?, ?, ?)
-                            ''', (student['Student ID'], amount, datetime.now().strftime('%Y-%m-%d'), 
-                                 receipt_no, payment_notes, next_due_str))
-                            
-                            # Payment already inserted above
-                            
-                            conn.commit()
-                            conn.close()
-                            
-                            # Send receipts (Email + WhatsApp)
-                            with st.spinner("📧 Sending receipts..."):
-                                next_due_str = next_payment_due.strftime('%Y-%m-%d') if next_payment_due else None
-                                
-                                # Send Email Receipt
-                                email_success, email_message = send_payment_receipt_email(
-                                    student_email, student['Full Name'], 
-                                    amount, receipt_no, student['Class Plan'],
-                                    student['Student ID'], student['Instrument'],
-                                    str(student['Start Date']).split(' ')[0], str(student['Expiry Date']).split(' ')[0],
-                                    payment_method, next_due_str
-                                )
-                                
-                                # Send WhatsApp Receipt
+                    # Payment processing buttons
+                    col1, col2, col3 = st.columns(3)
+                    
+                    with col1:
+                        if st.button("💰 Process Payment", use_container_width=True, type="primary", key=f"process_{student['Student ID']}"):
+                            if amount:
+                                conn = sqlite3.connect('chords_crm.db')
+                                cursor = conn.cursor()
+                                next_due_str = next_payment_due.strftime('%Y-%m-%d')
+                                cursor.execute('''
+                                    INSERT INTO payments (student_id, amount, payment_date, receipt_number, notes, next_due_date)
+                                    VALUES (?, ?, ?, ?, ?, ?)
+                                ''', (student['Student ID'], amount, datetime.now().strftime('%Y-%m-%d'), 
+                                     receipt_no, payment_notes, next_due_str))
+                                conn.commit()
+                                conn.close()
+                                st.success(f"✅ Payment ₹{amount} recorded! Receipt: {receipt_no}")
+                                st.rerun()
+                            else:
+                                st.error("⚠️ Please enter payment amount")
+                    
+                    with col2:
+                        if st.button("📧 Email Receipt", use_container_width=True, key=f"email_{student['Student ID']}"):
+                            if student_email:
+                                with st.spinner("📧 Sending email..."):
+                                    next_due_str = next_payment_due.strftime('%Y-%m-%d') if next_payment_due else None
+                                    email_success, email_message = send_payment_receipt_email(
+                                        student_email, student['Full Name'], 
+                                        amount, receipt_no, student['Class Plan'],
+                                        student['Student ID'], student['Instrument'],
+                                        str(student['Start Date']).split(' ')[0], str(student['Expiry Date']).split(' ')[0],
+                                        payment_method, next_due_str
+                                    )
+                                    if email_success:
+                                        st.success("✅ Email receipt sent!")
+                                    else:
+                                        st.error(f"❌ Email failed: {email_message}")
+                            else:
+                                st.error("⚠️ Please enter email address")
+                    
+                    with col3:
+                        if st.button("📱 WhatsApp Receipt", use_container_width=True, key=f"whatsapp_{student['Student ID']}"):
+                            with st.spinner("📱 Sending WhatsApp..."):
                                 next_due_info = f"Next Due: {next_payment_due.strftime('%d-%m-%Y')}" if next_payment_due else "🎉 Fully Paid - No Dues!"
-                                print(f"CALLING WhatsApp receipt function...")
                                 try:
                                     whatsapp_success, whatsapp_message = send_whatsapp_payment_receipt(
                                         student['Mobile'], student['Full Name'],
                                         amount, receipt_no, student['Class Plan'],
                                         datetime.now().strftime('%Y-%m-%d'), next_due_info
                                     )
-                                    print(f"WhatsApp result: {whatsapp_success}, {whatsapp_message}")
+                                    if whatsapp_success:
+                                        st.success("✅ WhatsApp receipt sent!")
+                                    else:
+                                        st.error(f"❌ WhatsApp failed: {whatsapp_message}")
                                 except Exception as e:
-                                    print(f"WhatsApp exception: {e}")
-                                    whatsapp_success, whatsapp_message = False, f"Exception: {e}"
-                                
-                                # Show results
-                                if email_success and whatsapp_success:
-                                    st.success("✅ Payment processed! Receipts sent via Email & WhatsApp.")
-                                elif email_success:
-                                    st.success("✅ Payment processed! Email receipt sent.")
-                                    st.warning(f"⚠️ WhatsApp failed: {whatsapp_message}")
-                                elif whatsapp_success:
-                                    st.success("✅ Payment processed! WhatsApp receipt sent.")
-                                    st.warning(f"⚠️ Email failed: {email_message}")
-                                else:
-                                    st.error(f"❌ Payment recorded but receipts failed. Email: {email_message}, WhatsApp: {whatsapp_message}")
-                                
-                                st.rerun()
-                        else:
-                            st.error("⚠️ Please fill in amount and email address")
+                                    st.error(f"❌ WhatsApp error: {str(e)}")
     else:
         st.info("📅 No students registered yet.")
         
@@ -1538,11 +1533,25 @@ def due_alerts_module():
     # Debug section
     st.markdown("---")
     st.markdown("### 🔧 Debug WhatsApp")
-    if st.button("🧪 Test WhatsApp API"):
-        from sms_email import test_fast2sms
-        status, response = test_fast2sms()
-        st.write(f"Status: {status}")
-        st.write(f"Response: {response}")
+    
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("🧪 Test WhatsApp API"):
+            from sms_email import test_fast2sms
+            status, response = test_fast2sms()
+            st.write(f"Status: {status}")
+            st.write(f"Response: {response}")
+    
+    with col2:
+        if st.button("📱 Test WhatsApp Receipt"):
+            success, message = send_whatsapp_payment_receipt(
+                "7702031818", "Test Student", 1000, "CMA00001", 
+                "1 Month - 8", datetime.now().strftime('%Y-%m-%d'), "Next Due: 01-10-2024"
+            )
+            if success:
+                st.success(f"✅ Test successful: {message}")
+            else:
+                st.error(f"❌ Test failed: {message}")
     
     if st.button("← Back to Dashboard"):
         st.session_state.page = "dashboard"
