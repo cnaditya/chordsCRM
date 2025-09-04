@@ -41,20 +41,23 @@ def send_whatsapp_reminder(mobile, student_name, plan, expiry_date, include_qr=F
     
     url = "https://www.fast2sms.com/dev/whatsapp"
     
-    # API key in query params (as per your Excel sheet)
+    # API key in headers (correct placement)
+    headers = {
+        "authorization": FAST2SMS_API_KEY
+    }
+    
     params = {
-        "authorization": FAST2SMS_API_KEY,
         "message_id": message_id,
         "numbers": mobile,
         "variables_values": variables
     }
     
     try:
-        response = requests.get(url, params=params, timeout=10)
+        response = requests.get(url, headers=headers, params=params, timeout=10)
         
         # Debug logging
         print(f"DEBUG {message_id}: URL={url}")
-        print(f"DEBUG {message_id}: No sender_id sent")
+        print(f"DEBUG {message_id}: Headers={headers}")
         print(f"DEBUG {message_id}: Params={params}")
         print(f"DEBUG {message_id}: Status={response.status_code}")
         print(f"DEBUG {message_id}: Response={response.text}")
