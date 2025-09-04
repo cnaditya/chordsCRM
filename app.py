@@ -827,19 +827,25 @@ def payment_module():
                             key=f"status_{student['Student ID']}"
                         )
                         
+                        # Next payment due date (for both installments and renewals)
+                        from datetime import timedelta
                         if payment_status == "Installment Payment":
-                            # Next payment due date (editable for installments)
-                            from datetime import timedelta
                             default_next_due = datetime.now() + timedelta(days=30)  # Default 1 month
-                            next_payment_due = st.date_input(
-                                "🗓️ Next Payment Due Date", 
-                                value=default_next_due.date(),
-                                help="Set when the next installment is due",
-                                key=f"next_due_{student['Student ID']}"
-                            )
+                            help_text = "Set when the next installment is due"
                         else:
-                            next_payment_due = None
-                            st.success("🎉 Marking as Fully Paid - No future dues!")
+                            # For fully paid students, set renewal date
+                            default_next_due = datetime.now() + timedelta(days=365)  # Default 1 year for renewal
+                            help_text = "Set when this student needs to renew (next package start date)"
+                        
+                        next_payment_due = st.date_input(
+                            "🗓️ Next Due Date", 
+                            value=default_next_due.date(),
+                            help=help_text,
+                            key=f"next_due_{student['Student ID']}"
+                        )
+                        
+                        if payment_status == "Fully Paid - No Dues":
+                            st.info("💡 This date will be used for renewal reminders")
                         
                         # Payment notes
                         payment_notes = st.text_area(
@@ -872,8 +878,8 @@ def payment_module():
                             # Update database
                             conn = sqlite3.connect('chords_crm.db')
                             cursor = conn.cursor()
-                            # Record payment with installment details
-                            next_due_str = next_payment_due.strftime('%Y-%m-%d') if next_payment_due else None
+                            # Record payment with next due date (installment or renewal)
+                            next_due_str = next_payment_due.strftime('%Y-%m-%d')
                             cursor.execute('''
                                 INSERT INTO payments (student_id, amount, payment_date, receipt_number, notes, next_due_date)
                                 VALUES (?, ?, ?, ?, ?, ?)
