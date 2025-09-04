@@ -69,6 +69,8 @@ def send_whatsapp_reminder(mobile, student_name, plan, expiry_date, include_qr=F
 def send_whatsapp_payment_receipt(mobile, student_name, amount, receipt_no, plan, payment_date, next_due_info):
     """Send payment receipt using template 5171"""
     
+    print(f"RECEIPT FUNCTION CALLED: {student_name}, {mobile}, {amount}")
+    
     # Format payment date
     try:
         date_obj = datetime.strptime(str(payment_date), '%Y-%m-%d')
@@ -78,6 +80,8 @@ def send_whatsapp_payment_receipt(mobile, student_name, amount, receipt_no, plan
     
     # Template 5171: student_name|amount|receipt_no|plan|payment_date|next_due_info
     variables_list = [student_name, str(amount), receipt_no, plan, payment_date_formatted, next_due_info]
+    
+    print(f"RECEIPT VARIABLES: {variables_list}")
     
     return send_whatsapp("payment_receipt", mobile, variables_list)
 
