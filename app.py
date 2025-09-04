@@ -1123,8 +1123,13 @@ def student_list_module():
                                              index=package_index,
                                              key=f"pkg_{student['Student ID']}")
                     
+                    try:
+                        start_value = pd.to_datetime(start_date).date()
+                    except:
+                        start_value = datetime.now().date()
+                    
                     new_start_date = st.date_input("Start Date", 
-                                                  value=pd.to_datetime(start_date).date(),
+                                                  value=start_value,
                                                   key=f"start_{student['Student ID']}")
                 
                 # Action buttons
