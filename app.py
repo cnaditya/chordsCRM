@@ -938,9 +938,9 @@ def payment_module():
         
         # Calculate overall stats
         all_df = pd.DataFrame(students, columns=[
-            'ID', 'Student ID', 'Full Name', 'Age', 'Mobile', 'Instrument', 'Class Plan', 
-            'Total Classes', 'Start Date', 'Expiry Date', 'Status', 'Classes Completed', 
-            'Extra Classes', 'First Class Date', 'Email', 'Date of Birth', 'Sex'
+            'ID', 'Student ID', 'Full Name', 'Age', 'Mobile', 'Email', 'Date of Birth', 'Sex',
+            'Instrument', 'Class Plan', 'Total Classes', 'Start Date', 'Expiry Date', 'Status', 
+            'Classes Completed', 'Extra Classes', 'First Class Date', 'Created At', 'Updated At'
         ])
         all_df['Expiry Date'] = all_df['Expiry Date'].astype(str).str.split(' ').str[0]
         all_df['Status'] = all_df.apply(lambda row: 
