@@ -40,18 +40,21 @@ def send_whatsapp_reminder(mobile, student_name, plan, expiry_date, include_qr=T
     except:
         expiry_date_formatted = str(expiry_date)
     
-    # Template 4986 parameters
+    # Template parameters - API key in headers
     variables = f"{student_name}|{plan}|{expiry_date_formatted}"
     
+    headers = {
+        "authorization": FAST2SMS_API_KEY
+    }
+    
     params = {
-        "authorization": FAST2SMS_API_KEY,
         "message_id": "3004",
         "numbers": mobile,
         "variables_values": variables
     }
     
     try:
-        response = requests.get(url, params=params, timeout=10)
+        response = requests.get(url, headers=headers, params=params, timeout=10)
         
         print(f"DEBUG 4986: URL: {url}")
         print(f"DEBUG 4986: Full URL: {response.url}")
@@ -130,16 +133,18 @@ def send_whatsapp_payment_receipt(mobile, student_name, amount, receipt_no, plan
     # Variables: student_name, amount, receipt_no, plan, payment_date, next_due_info
     variables = f"{student_name}|{amount}|{receipt_no}|{plan}|{payment_date_formatted}|{next_due_info}"
     
+    headers = {
+        "authorization": FAST2SMS_API_KEY
+    }
+    
     params = {
-        "authorization": FAST2SMS_API_KEY,
         "message_id": "4587",
         "numbers": mobile,
-        "variables_values": variables,
-
+        "variables_values": variables
     }
     
     try:
-        response = requests.get(url, params=params, timeout=10)
+        response = requests.get(url, headers=headers, params=params, timeout=10)
         
         if response.status_code == 200:
             try:
