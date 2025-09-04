@@ -957,7 +957,13 @@ def payment_module():
         
         from datetime import timedelta
         next_7_days = datetime.now() + timedelta(days=7)
-        due_soon = len(all_df[pd.to_datetime(all_df['Expiry Date']) <= next_7_days])
+        
+        # Safe date conversion
+        try:
+            valid_dates = pd.to_datetime(all_df['Expiry Date'], errors='coerce')
+            due_soon = len(all_df[valid_dates <= next_7_days])
+        except:
+            due_soon = 0
         
         col1, col2, col3 = st.columns(3)
         with col1:
