@@ -691,9 +691,55 @@ def payment_module():
         
         else:  # Due/Overdue Students Only
             from datetime import timedelta
-            next_7_days = datetime.now() + timedelta(days=7)
+            today = datetime.now()
+            next_7_days = today + timedelta(days=7)
+            
+            # Get students with installment due dates from payments table
+            conn = sqlite3.connect('chords_crm.db')
+            cursor = conn.cursor()
+            cursor.execute('''
+                SELECT DISTINCT student_id, next_due_date 
+                FROM payments 
+                WHERE next_due_date IS NOT NULL
+                ORDER BY student_id, payment_date DESC
+            ''')
+            installment_dues = cursor.fetchall()
+            conn.close()
+            
+            # Create dict of latest due dates for each student
+            student_due_dates = {}
+            for student_id, due_date in installment_dues:
+                if student_id not in student_due_dates:
+                    student_due_dates[student_id] = due_date
+            
+            due_students = []
             try:
-                df = df[(df['Status'] == 'Expired') | (pd.to_datetime(df['Expiry Date'], errors='coerce') <= next_7_days)]
+                for _, student in df.iterrows():
+                    is_due = False
+                    
+                    # Check package expiry (existing logic)
+                    if student['Status'] == 'Expired':
+                        is_due = True
+                    elif pd.to_datetime(student['Expiry Date'], errors='coerce') <= next_7_days:
+                        is_due = True
+                    
+                    # Check installment due dates
+                    if student['Student ID'] in student_due_dates:
+                        try:
+                            due_date = datetime.strptime(student_due_dates[student['Student ID']], '%Y-%m-%d')
+                            if due_date <= next_7_days:
+                                is_due = True
+                        except:
+                            pass
+                    
+                    if is_due:
+                        due_students.append(student)
+                
+                if due_students:
+                    df = pd.DataFrame(due_students)
+                else:
+                    df = df.iloc[0:0]  # Empty dataframe
+                    
             except Exception as e:
                 st.error(f"Date parsing error: {str(e)}")
                 df = df[df['Status'] == 'Expired']  # Fallback to only expired students
@@ -780,8 +826,21 @@ def payment_module():
                     
                     st.divider()
                     
-                    # WhatsApp reminder for overdue students
+                    # WhatsApp reminder for overdue students or installment due
+                    show_reminder = False
                     if student['Status'] == 'Expired':
+                        show_reminder = True
+                    else:
+                        # Check if installment is due
+                        if student['Student ID'] in student_due_dates:
+                            try:
+                                due_date = datetime.strptime(student_due_dates[student['Student ID']], '%Y-%m-%d')
+                                if due_date <= datetime.now():
+                                    show_reminder = True
+                            except:
+                                pass
+                    
+                    if show_reminder:
                         if st.button(f"📱 Send WhatsApp Reminder", key=f"wa_{student['Student ID']}", use_container_width=True):
                             success, message = send_whatsapp_reminder(
                                 student['Mobile'], student['Full Name'], 
