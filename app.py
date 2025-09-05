@@ -912,6 +912,7 @@ def payment_module():
                         )
                         
                         # Get package renewal date from existing expiry date (for both installment and fully paid)
+                        from datetime import timedelta
                         try:
                             renewal_date = datetime.strptime(str(student['Expiry Date']).split(' ')[0], '%Y-%m-%d').date()
                         except:
