@@ -199,7 +199,6 @@ Thank you for your payment to Chords Music Academy. We have successfully receive
 - No. of Classes: {num_classes}
 - Class Type: Offline
 - 🗓️ {next_due_info}
-{f"- 🔄 Package Renewal: {format_date(renewal_date)}" if renewal_date and payment_status == "Installment Payment" else ""}
 
 ---
 
