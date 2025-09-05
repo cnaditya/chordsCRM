@@ -1607,8 +1607,57 @@ def due_alerts_module():
         df['Expiry Date'] = df['Expiry Date'].astype(str).str.split(' ').str[0]  # Remove time part
         df['Expiry Date Parsed'] = pd.to_datetime(df['Expiry Date'], errors='coerce')
         
-        overdue_df = df[df['Expiry Date Parsed'] < today]
-        due_soon_df = df[(df['Expiry Date Parsed'] >= today) & (df['Expiry Date Parsed'] <= next_3_days)]
+        # Get installment due dates from payments table
+        conn = sqlite3.connect('chords_crm.db')
+        cursor = conn.cursor()
+        cursor.execute('''
+            SELECT DISTINCT student_id, next_due_date 
+            FROM payments 
+            WHERE next_due_date IS NOT NULL
+            ORDER BY student_id, payment_date DESC
+        ''')
+        installment_dues = cursor.fetchall()
+        conn.close()
+        
+        # Create dict of latest due dates for each student
+        student_due_dates = {}
+        for student_id, due_date in installment_dues:
+            if student_id not in student_due_dates:
+                student_due_dates[student_id] = due_date
+        
+        # Check both package expiry and installment due dates
+        overdue_students = []
+        due_soon_students = []
+        
+        for _, student in df.iterrows():
+            is_overdue = False
+            is_due_soon = False
+            
+            # Check package expiry
+            if pd.notna(student['Expiry Date Parsed']):
+                if student['Expiry Date Parsed'] < today:
+                    is_overdue = True
+                elif student['Expiry Date Parsed'] <= next_3_days:
+                    is_due_soon = True
+            
+            # Check installment due dates
+            if student['Student ID'] in student_due_dates:
+                try:
+                    due_date = datetime.strptime(student_due_dates[student['Student ID']], '%Y-%m-%d')
+                    if due_date < today:
+                        is_overdue = True
+                    elif due_date <= next_3_days:
+                        is_due_soon = True
+                except:
+                    pass
+            
+            if is_overdue:
+                overdue_students.append(student)
+            elif is_due_soon:
+                due_soon_students.append(student)
+        
+        overdue_df = pd.DataFrame(overdue_students) if overdue_students else pd.DataFrame()
+        due_soon_df = pd.DataFrame(due_soon_students) if due_soon_students else pd.DataFrame()
         
         # Overdue students
         if not overdue_df.empty:
