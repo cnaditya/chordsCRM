@@ -1771,10 +1771,22 @@ def due_alerts_module():
                 
                 with col2:
                     if st.button("📱 WhatsApp", key=f"wa_overdue_{student['Student ID']}"):
-                        success, message = send_whatsapp_reminder(
-                            student['Mobile'], student['Full Name'], 
-                            student['Class Plan'], student['Expiry Date']
-                        )
+                        # Check if this is installment reminder or package reminder
+                        if pending_amount > 0 and student['Student ID'] in student_due_dates:
+                            # Send installment reminder
+                            from sms_email import send_whatsapp_installment_reminder
+                            success, message = send_whatsapp_installment_reminder(
+                                student['Mobile'], student['Full Name'], 
+                                pending_amount, student_due_dates[student['Student ID']],
+                                student['Class Plan'], student['Expiry Date']
+                            )
+                        else:
+                            # Send package expiry reminder
+                            success, message = send_whatsapp_reminder(
+                                student['Mobile'], student['Full Name'], 
+                                student['Class Plan'], student['Expiry Date']
+                            )
+                        
                         if success:
                             st.success("Reminder sent!")
                         else:
@@ -1835,10 +1847,22 @@ def due_alerts_module():
                 
                 with col2:
                     if st.button("📱 WhatsApp", key=f"wa_due_{student['Student ID']}"):
-                        success, message = send_whatsapp_reminder(
-                            student['Mobile'], student['Full Name'], 
-                            student['Class Plan'], student['Expiry Date']
-                        )
+                        # Check if this is installment reminder or package reminder
+                        if pending_amount > 0 and student['Student ID'] in student_due_dates:
+                            # Send installment reminder
+                            from sms_email import send_whatsapp_installment_reminder
+                            success, message = send_whatsapp_installment_reminder(
+                                student['Mobile'], student['Full Name'], 
+                                pending_amount, student_due_dates[student['Student ID']],
+                                student['Class Plan'], student['Expiry Date']
+                            )
+                        else:
+                            # Send package expiry reminder
+                            success, message = send_whatsapp_reminder(
+                                student['Mobile'], student['Full Name'], 
+                                student['Class Plan'], student['Expiry Date']
+                            )
+                        
                         if success:
                             st.success("Reminder sent!")
                         else:
