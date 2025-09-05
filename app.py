@@ -1667,7 +1667,27 @@ def due_alerts_module():
                 
                 # Check what type of overdue this is
                 overdue_reason = ""
-                if student['Student ID'] in student_due_dates:
+                
+                # First check if student has pending balance for installments
+                conn = sqlite3.connect('chords_crm.db')
+                cursor = conn.cursor()
+                cursor.execute('SELECT SUM(amount) FROM payments WHERE student_id = ?', (student['Student ID'],))
+                total_paid = cursor.fetchone()[0] or 0
+                conn.close()
+                
+                # Get package fee to check if fully paid
+                default_package_fees = {
+                    "1 Month - 8": 4000,
+                    "3 Month - 24": 10800,
+                    "6 Month - 48": 20400,
+                    "12 Month - 96": 38400,
+                    "No Package": 0
+                }
+                total_fees = default_package_fees.get(student['Class Plan'], 0)
+                pending_amount = max(0, total_fees - total_paid)
+                
+                # If student has pending balance, check installment overdue
+                if pending_amount > 0 and student['Student ID'] in student_due_dates:
                     try:
                         installment_due = datetime.strptime(student_due_dates[student['Student ID']], '%Y-%m-%d')
                         if installment_due < today:
@@ -1676,7 +1696,7 @@ def due_alerts_module():
                     except:
                         pass
                 
-                # If no installment overdue, check package expiry
+                # If no installment overdue or fully paid, check package expiry
                 if not overdue_reason and pd.notna(student['Expiry Date Parsed']):
                     if student['Expiry Date Parsed'] < today:
                         days_overdue = (today - student['Expiry Date Parsed']).days
@@ -1711,7 +1731,27 @@ def due_alerts_module():
                 
                 # Check what type of due date this is
                 due_reason = ""
-                if student['Student ID'] in student_due_dates:
+                
+                # First check if student has pending balance for installments
+                conn = sqlite3.connect('chords_crm.db')
+                cursor = conn.cursor()
+                cursor.execute('SELECT SUM(amount) FROM payments WHERE student_id = ?', (student['Student ID'],))
+                total_paid = cursor.fetchone()[0] or 0
+                conn.close()
+                
+                # Get package fee to check if fully paid
+                default_package_fees = {
+                    "1 Month - 8": 4000,
+                    "3 Month - 24": 10800,
+                    "6 Month - 48": 20400,
+                    "12 Month - 96": 38400,
+                    "No Package": 0
+                }
+                total_fees = default_package_fees.get(student['Class Plan'], 0)
+                pending_amount = max(0, total_fees - total_paid)
+                
+                # If student has pending balance, check installment due
+                if pending_amount > 0 and student['Student ID'] in student_due_dates:
                     try:
                         installment_due = datetime.strptime(student_due_dates[student['Student ID']], '%Y-%m-%d')
                         if installment_due <= next_3_days:
@@ -1720,7 +1760,7 @@ def due_alerts_module():
                     except:
                         pass
                 
-                # If no installment due, check package expiry
+                # If no installment due or fully paid, check package expiry
                 if not due_reason and pd.notna(student['Expiry Date Parsed']):
                     if student['Expiry Date Parsed'] <= next_3_days:
                         days_left = (student['Expiry Date Parsed'] - today).days
