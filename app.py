@@ -932,33 +932,19 @@ def payment_module():
                                 
                                 next_due_info = f"Next Due: {next_payment_due.strftime('%d-%m-%Y')}" if next_payment_due else "🎉 Fully Paid - No Dues!"
                                 
-                                # Try WhatsApp first (only works with registered number)
-                                if student['Mobile'] in ['7981585309', '917981585309']:
-                                    whatsapp_success, whatsapp_message = send_whatsapp_payment_receipt(
-                                        student['Mobile'], student['Full Name'],
-                                        amount, receipt_no, student['Class Plan'],
-                                        datetime.now().strftime('%Y-%m-%d'), next_due_info
-                                    )
-                                    
-                                    if whatsapp_success:
-                                        st.success(f"✅ Payment ₹{amount} recorded & WhatsApp sent! Receipt: {receipt_no}")
-                                        st.info(f"Sent to: {student['Mobile']} | Amount: ₹{amount}")
-                                    else:
-                                        st.success(f"✅ Payment ₹{amount} recorded! Receipt: {receipt_no}")
-                                        st.error(f"❌ WhatsApp failed: {whatsapp_message}")
+                                # Send WhatsApp receipt to student
+                                whatsapp_success, whatsapp_message = send_whatsapp_payment_receipt(
+                                    student['Mobile'], student['Full Name'],
+                                    amount, receipt_no, student['Class Plan'],
+                                    datetime.now().strftime('%Y-%m-%d'), next_due_info
+                                )
+                                
+                                if whatsapp_success:
+                                    st.success(f"✅ Payment ₹{amount} recorded & WhatsApp sent! Receipt: {receipt_no}")
+                                    st.info(f"Sent to: {student['Mobile']} | Amount: ₹{amount}")
                                 else:
-                                    # Fallback to SMS for other numbers
-                                    sms_success, sms_message = send_sms_receipt(
-                                        student['Mobile'], student['Full Name'],
-                                        amount, receipt_no, next_due_info
-                                    )
-                                    
-                                    if sms_success:
-                                        st.success(f"✅ Payment ₹{amount} recorded & SMS sent! Receipt: {receipt_no}")
-                                        st.info(f"SMS sent to: {student['Mobile']} | Amount: ₹{amount}")
-                                    else:
-                                        st.success(f"✅ Payment ₹{amount} recorded! Receipt: {receipt_no}")
-                                        st.error(f"❌ SMS failed: {sms_message}")
+                                    st.success(f"✅ Payment ₹{amount} recorded! Receipt: {receipt_no}")
+                                    st.error(f"❌ WhatsApp failed: {whatsapp_message}")
                                 st.rerun()
                             else:
                                 st.error("⚠️ Please enter payment amount")
@@ -1606,7 +1592,7 @@ def due_alerts_module():
     
     if st.session_state.get("btn2"):
         success, message = send_whatsapp_payment_receipt(
-            "7981585309", "Test Student", 1000, "CMA00001", 
+            "7702031818", "Test Student", 1000, "CMA00001", 
             "1 Month - 8", datetime.now().strftime('%Y-%m-%d'), "Next Due: 01-10-2024"
         )
         if success:
