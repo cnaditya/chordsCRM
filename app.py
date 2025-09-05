@@ -944,7 +944,6 @@ def payment_module():
                                     st.success(f"✅ Payment ₹{amount} recorded! Receipt: {receipt_no}")
                                     st.error(f"❌ WhatsApp failed: {whatsapp_message}")
                                     st.error(f"Mobile: {student['Mobile']} | Response: {whatsapp_message}")
-                                st.rerun()
                             else:
                                 st.error("⚠️ Please enter payment amount")
     else:
