@@ -148,7 +148,7 @@ def test_fast2sms():
     print(f"Message: {message}")
     return 200 if success else 400, message
 
-def send_payment_receipt_email(student_email, student_name, amount, receipt_number, plan, student_id=None, instrument=None, start_date=None, expiry_date=None, payment_method="Cash Payment", next_due_date=None, remaining_balance=0, payment_status="Installment Payment"):
+def send_payment_receipt_email(student_email, student_name, amount, receipt_number, plan, student_id=None, instrument=None, start_date=None, expiry_date=None, payment_method="Cash Payment", next_due_date=None, remaining_balance=0, payment_status="Installment Payment", renewal_date=None):
     """Send payment receipt via Gmail SMTP"""
     sender_email = "chords.music.academy@gmail.com"
     sender_password = "xdiu rhua fhpc zwrk"
@@ -180,7 +180,8 @@ def send_payment_receipt_email(student_email, student_name, amount, receipt_numb
         next_due_info = f"🎉 FULLY PAID - NO DUES! Renewal Date: {format_date(next_due_date)}"
     else:
         if remaining_balance > 0:
-            next_due_info = f"Balance Due: ₹{remaining_balance:,.0f}, Next Due: {format_date(next_due_date)}"
+            renewal_info = f", Package Renewal: {format_date(renewal_date)}" if renewal_date else ""
+            next_due_info = f"Balance Due: ₹{remaining_balance:,.0f}, Next Due: {format_date(next_due_date)}{renewal_info}"
         else:
             next_due_info = f"Next Due Date: {format_date(next_due_date)}"
     
@@ -199,6 +200,7 @@ Thank you for your payment to Chords Music Academy. We have successfully receive
 - No. of Classes: {num_classes}
 - Class Type: Offline
 - 🗓️ {next_due_info}
+{f"- 🔄 Package Renewal: {format_date(renewal_date)}" if renewal_date and payment_status == "Installment Payment" else ""}
 
 ---
 

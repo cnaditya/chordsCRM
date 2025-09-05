@@ -834,25 +834,37 @@ def payment_module():
                             key=f"status_{student['Student ID']}"
                         )
                         
-                        # Next payment due date (for both installments and renewals)
+                        # Payment dates based on status
                         from datetime import timedelta
+                        
+                        # Get package renewal date from existing expiry date
+                        try:
+                            renewal_date = datetime.strptime(str(student['Expiry Date']).split(' ')[0], '%Y-%m-%d').date()
+                        except:
+                            renewal_date = (datetime.now() + timedelta(days=365)).date()
+                        
                         if payment_status == "Installment Payment":
-                            default_next_due = datetime.now() + timedelta(days=30)  # Default 1 month
-                            help_text = "Set when the next installment is due"
+                            # Next installment due date
+                            default_next_due = datetime.now() + timedelta(days=30)
+                            next_payment_due = st.date_input(
+                                "💰 Next Installment Due", 
+                                value=default_next_due.date(),
+                                help="When is the next installment payment due?",
+                                key=f"next_due_{student['Student ID']}"
+                            )
+                            
+                            # Show package renewal date (read-only info)
+                            st.info(f"🔄 Package Renewal Date: {renewal_date.strftime('%d-%m-%Y')} (auto-calculated from package expiry)")
                         else:
-                            # For fully paid students, set renewal date
-                            default_next_due = datetime.now() + timedelta(days=365)  # Default 1 year for renewal
-                            help_text = "Set when this student needs to renew (next package start date)"
-                        
-                        next_payment_due = st.date_input(
-                            "🗓️ Next Due Date", 
-                            value=default_next_due.date(),
-                            help=help_text,
-                            key=f"next_due_{student['Student ID']}"
-                        )
-                        
-                        if payment_status == "Fully Paid - No Dues":
-                            st.info("💡 This date will be used for renewal reminders")
+                            # For fully paid students, only renewal date
+                            default_renewal = datetime.now() + timedelta(days=365)
+                            next_payment_due = st.date_input(
+                                "🔄 Renewal Date", 
+                                value=default_renewal.date(),
+                                help="When should this student renew their package?",
+                                key=f"next_due_{student['Student ID']}"
+                            )
+                            renewal_date = next_payment_due  # Same for fully paid
                         
                         # Payment notes
                         payment_notes = st.text_area(
@@ -904,7 +916,8 @@ def payment_module():
                                     amount, receipt_no, student['Class Plan'],
                                     student['Student ID'], student['Instrument'],
                                     str(student['Start Date']).split(' ')[0], str(student['Expiry Date']).split(' ')[0],
-                                    payment_method, next_due_str, remaining_balance_email, payment_status
+                                    payment_method, next_due_str, remaining_balance_email, payment_status, 
+                                    renewal_date.strftime('%Y-%m-%d') if payment_status == "Installment Payment" else None
                                 )
                                 
                                 if email_success:
@@ -936,9 +949,9 @@ def payment_module():
                                 # Calculate remaining balance after this payment
                                 remaining_balance = max(0, pending_amount - amount)
                                 
-                                # Format Var6 with balance info (simple format)
+                                # Format Var6 with balance and renewal info
                                 if remaining_balance > 0:
-                                    next_due_info = f"Balance Due: ₹{remaining_balance:,.0f}, Next Due: {next_payment_due.strftime('%d-%m-%Y')}"
+                                    next_due_info = f"Balance Due: ₹{remaining_balance:,.0f}, Next Due: {next_payment_due.strftime('%d-%m-%Y')}, Package Renewal: {renewal_date.strftime('%d-%m-%Y')}"
                                 else:
                                     next_due_info = f"🎉 Fully Paid - No Dues! Renewal Date: {next_payment_due.strftime('%d-%m-%Y')}"
                                 
