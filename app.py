@@ -751,18 +751,27 @@ def payment_module():
                         "No Package": 0
                     }
                     
-                    # Editable package fee (for bargaining)
+                    # Editable package fee (for bargaining) - FIXED: This should not change when payment amount changes
                     default_fee = default_package_fees.get(student['Class Plan'], 0)
+                    
+                    # Check if package fee was already set in session to prevent reset
+                    session_key = f"total_fees_{student['Student ID']}"
+                    if session_key not in st.session_state:
+                        st.session_state[session_key] = float(default_fee)
+                    
                     total_fees = st.number_input(
                         f"📋 Package Fee for {student['Class Plan']}",
                         min_value=0.0,
-                        value=float(default_fee),
+                        value=st.session_state[session_key],
                         step=100.0,
                         help="Default fee - can be edited for discounts/bargaining",
                         key=f"package_fee_{student['Student ID']}"
                     )
                     
-                    # total_fees is now set above as editable input
+                    # Update session state when user changes the fee
+                    st.session_state[session_key] = total_fees
+                    
+                    # Calculate pending amount correctly
                     pending_amount = max(0, total_fees - total_paid)
                     
                     # Payment Summary
