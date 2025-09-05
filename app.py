@@ -930,7 +930,14 @@ def payment_module():
                                 conn.commit()
                                 conn.close()
                                 
-                                next_due_info = f"Next Due: {next_payment_due.strftime('%d-%m-%Y')}" if next_payment_due else "🎉 Fully Paid - No Dues!"
+                                # Calculate remaining balance after this payment
+                                remaining_balance = max(0, pending_amount - amount)
+                                
+                                # Format Var6 with balance info (single line)
+                                if remaining_balance > 0:
+                                    next_due_info = f"Balance Due: ₹{remaining_balance:,.0f} | Next Due: {next_payment_due.strftime('%d-%m-%Y')}"
+                                else:
+                                    next_due_info = "🎉 Fully Paid - No Dues!"
                                 
                                 # Send WhatsApp receipt to student
                                 whatsapp_success, whatsapp_message = send_whatsapp_payment_receipt(
