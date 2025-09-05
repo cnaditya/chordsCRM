@@ -1071,22 +1071,79 @@ def payment_module():
         all_df['Status'] = all_df.apply(get_status_safe, axis=1)
         
         from datetime import timedelta
-        next_7_days = datetime.now() + timedelta(days=7)
+        today = datetime.now()
+        next_7_days = today + timedelta(days=7)
         
-        # Safe date conversion with null handling
-        try:
-            valid_dates = pd.to_datetime(all_df['Expiry Date'], errors='coerce')
-            valid_dates = valid_dates.dropna()  # Remove invalid dates
-            due_soon = len(all_df[valid_dates <= next_7_days]) if not valid_dates.empty else 0
-        except:
-            due_soon = 0
+        # Get installment due dates
+        conn = sqlite3.connect('chords_crm.db')
+        cursor = conn.cursor()
+        cursor.execute('''
+            SELECT DISTINCT student_id, next_due_date 
+            FROM payments 
+            WHERE next_due_date IS NOT NULL
+            ORDER BY student_id, payment_date DESC
+        ''')
+        installment_dues = cursor.fetchall()
+        conn.close()
+        
+        student_due_dates = {}
+        for student_id, due_date in installment_dues:
+            if student_id not in student_due_dates:
+                student_due_dates[student_id] = due_date
+        
+        # Count overdue and due soon (including both package and installment)
+        overdue_count = 0
+        due_soon_count = 0
+        
+        for _, student in all_df.iterrows():
+            is_overdue = False
+            is_due_soon = False
+            
+            # Check package expiry
+            try:
+                if student['Status'] == 'Expired':
+                    is_overdue = True
+                elif pd.to_datetime(student['Expiry Date'], errors='coerce') <= next_7_days:
+                    is_due_soon = True
+            except:
+                pass
+            
+            # Check installment due dates (only if has pending balance)
+            if student['Student ID'] in student_due_dates:
+                try:
+                    # Check if student has pending balance
+                    conn = sqlite3.connect('chords_crm.db')
+                    cursor = conn.cursor()
+                    cursor.execute('SELECT SUM(amount) FROM payments WHERE student_id = ?', (student['Student ID'],))
+                    total_paid = cursor.fetchone()[0] or 0
+                    conn.close()
+                    
+                    default_package_fees = {
+                        "1 Month - 8": 4000, "3 Month - 24": 10800,
+                        "6 Month - 48": 20400, "12 Month - 96": 38400, "No Package": 0
+                    }
+                    total_fees = default_package_fees.get(student['Class Plan'], 0)
+                    pending_amount = max(0, total_fees - total_paid)
+                    
+                    if pending_amount > 0:
+                        due_date = datetime.strptime(student_due_dates[student['Student ID']], '%Y-%m-%d')
+                        if due_date < today:
+                            is_overdue = True
+                        elif due_date <= next_7_days:
+                            is_due_soon = True
+                except:
+                    pass
+            
+            if is_overdue:
+                overdue_count += 1
+            elif is_due_soon:
+                due_soon_count += 1
         
         col1, col2, col3 = st.columns(3)
         with col1:
-            expired_count = len(all_df[all_df['Status'] == 'Expired'])
-            st.metric("🔴 Overdue Payments", expired_count)
+            st.metric("🔴 Overdue Payments", overdue_count)
         with col2:
-            st.metric("⚠️ Due in 7 Days", due_soon)
+            st.metric("⚠️ Due in 7 Days", due_soon_count)
         with col3:
             st.metric("💰 Total Students", len(all_df))
     
