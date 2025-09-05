@@ -1663,8 +1663,24 @@ def due_alerts_module():
         if not overdue_df.empty:
             st.markdown("### 🔴 Overdue Students")
             for _, student in overdue_df.iterrows():
-                days_overdue = (today - student['Expiry Date Parsed']).days
                 emoji = get_instrument_emoji(student['Instrument'])
+                
+                # Check what type of overdue this is
+                overdue_reason = ""
+                if student['Student ID'] in student_due_dates:
+                    try:
+                        installment_due = datetime.strptime(student_due_dates[student['Student ID']], '%Y-%m-%d')
+                        if installment_due < today:
+                            days_overdue = (today - installment_due).days
+                            overdue_reason = f"<strong>Installment overdue by {days_overdue} days</strong> (Due: {installment_due.strftime('%d-%m-%Y')})"
+                    except:
+                        pass
+                
+                # If no installment overdue, check package expiry
+                if not overdue_reason and pd.notna(student['Expiry Date Parsed']):
+                    if student['Expiry Date Parsed'] < today:
+                        days_overdue = (today - student['Expiry Date Parsed']).days
+                        overdue_reason = f"<strong>Package overdue by {days_overdue} days</strong> (Expired: {datetime.strptime(student['Expiry Date'], '%Y-%m-%d').strftime('%d-%m-%Y')})"
                 
                 col1, col2 = st.columns([4, 1])
                 with col1:
@@ -1672,7 +1688,7 @@ def due_alerts_module():
                     <div class="overdue-alert">
                         <strong>{emoji} {student['Full Name']} - {student['Student ID']}</strong><br>
                         Plan: {student['Class Plan']} | Mobile: {student['Mobile']}<br>
-                        <strong>Overdue by {days_overdue} days</strong> (Expired: {datetime.strptime(student['Expiry Date'], '%Y-%m-%d').strftime('%d-%m-%Y')})
+                        {overdue_reason}
                     </div>
                     """, unsafe_allow_html=True)
                 
@@ -1691,8 +1707,24 @@ def due_alerts_module():
         if not due_soon_df.empty:
             st.markdown("### 🟡 Due in Next 3 Days")
             for _, student in due_soon_df.iterrows():
-                days_left = (student['Expiry Date Parsed'] - today).days
                 emoji = get_instrument_emoji(student['Instrument'])
+                
+                # Check what type of due date this is
+                due_reason = ""
+                if student['Student ID'] in student_due_dates:
+                    try:
+                        installment_due = datetime.strptime(student_due_dates[student['Student ID']], '%Y-%m-%d')
+                        if installment_due <= next_3_days:
+                            days_left = (installment_due - today).days
+                            due_reason = f"<strong>Installment due in {days_left} days</strong> ({installment_due.strftime('%d-%m-%Y')})"
+                    except:
+                        pass
+                
+                # If no installment due, check package expiry
+                if not due_reason and pd.notna(student['Expiry Date Parsed']):
+                    if student['Expiry Date Parsed'] <= next_3_days:
+                        days_left = (student['Expiry Date Parsed'] - today).days
+                        due_reason = f"<strong>Package expires in {days_left} days</strong> ({datetime.strptime(student['Expiry Date'], '%Y-%m-%d').strftime('%d-%m-%Y')})"
                 
                 col1, col2 = st.columns([4, 1])
                 with col1:
@@ -1700,7 +1732,7 @@ def due_alerts_module():
                     <div class="success-alert">
                         <strong>{emoji} {student['Full Name']} - {student['Student ID']}</strong><br>
                         Plan: {student['Class Plan']} | Mobile: {student['Mobile']}<br>
-                        <strong>Due in {days_left} days</strong> (Expires: {datetime.strptime(student['Expiry Date'], '%Y-%m-%d').strftime('%d-%m-%Y')})
+                        {due_reason}
                     </div>
                     """, unsafe_allow_html=True)
                 
