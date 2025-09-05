@@ -22,6 +22,12 @@ def send_whatsapp(template, mobile, variables_list):
 
     # Clean mobile number
     mobile = str(mobile).replace(" ", "").replace("-", "").replace("(", "").replace(")", "")
+    
+    # Remove leading zero if present
+    if mobile.startswith('0'):
+        mobile = mobile[1:]
+    
+    # Add country code if needed
     if len(mobile) == 10:
         mobile = "91" + mobile
 
@@ -100,14 +106,16 @@ def send_sms_receipt(mobile, student_name, amount, receipt_no, next_due_info):
 def send_whatsapp_payment_receipt(mobile, student_name, amount, receipt_no, plan, payment_date, next_due_info):
     """Send payment receipt using template 5171"""
     
-    print(f"DEBUG RECEIPT: mobile={mobile}, student={student_name}, amount={amount}")
-    
     # Clean mobile number (student's number - recipient)
     mobile_clean = str(mobile).replace(" ", "").replace("-", "").replace("(", "").replace(")", "")
+    
+    # Remove leading zero if present
+    if mobile_clean.startswith('0'):
+        mobile_clean = mobile_clean[1:]
+    
+    # Add country code if needed
     if len(mobile_clean) == 10:
         mobile_clean = "91" + mobile_clean
-    
-    print(f"DEBUG RECEIPT: cleaned mobile={mobile_clean}")
     
     # Format payment date
     try:
@@ -118,8 +126,6 @@ def send_whatsapp_payment_receipt(mobile, student_name, amount, receipt_no, plan
     
     # Template 5171: student_name|amount|receipt_no|plan|payment_date|next_due_info
     variables_list = [student_name, str(amount), receipt_no, plan, payment_date_formatted, next_due_info]
-    
-    print(f"DEBUG RECEIPT: variables={variables_list}")
     
     return send_whatsapp("payment_receipt", mobile_clean, variables_list)
 
