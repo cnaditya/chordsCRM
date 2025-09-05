@@ -69,7 +69,9 @@ def send_whatsapp_reminder(mobile, student_name, plan, expiry_date, include_qr=F
 def send_whatsapp_payment_receipt(mobile, student_name, amount, receipt_no, plan, payment_date, next_due_info):
     """Send payment receipt using template 5171"""
     
-    print(f"RECEIPT FUNCTION CALLED: {student_name}, {mobile}, {amount}")
+    # Test with your registered number first
+    if mobile != "917702031818":
+        return False, f"WhatsApp only works with registered number. Current: {mobile}"
     
     # Format payment date
     try:
@@ -81,12 +83,7 @@ def send_whatsapp_payment_receipt(mobile, student_name, amount, receipt_no, plan
     # Template 5171: student_name|amount|receipt_no|plan|payment_date|next_due_info
     variables_list = [student_name, str(amount), receipt_no, plan, payment_date_formatted, next_due_info]
     
-    print(f"RECEIPT VARIABLES: {variables_list}")
-    print(f"MOBILE: {mobile}")
-    
-    result = send_whatsapp("payment_receipt", mobile, variables_list)
-    print(f"WHATSAPP RESULT: {result}")
-    return result
+    return send_whatsapp("payment_receipt", mobile, variables_list)
 
 def test_fast2sms():
     """Test Fast2SMS API"""
