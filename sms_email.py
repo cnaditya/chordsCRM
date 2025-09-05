@@ -66,12 +66,48 @@ def send_whatsapp_reminder(mobile, student_name, plan, expiry_date, include_qr=F
     
     return send_whatsapp("fee_reminder", mobile, variables_list)
 
+def send_sms_receipt(mobile, student_name, amount, receipt_no, next_due_info):
+    """Send SMS receipt using Fast2SMS"""
+    url = "https://www.fast2sms.com/dev/bulksms"
+    
+    # Clean mobile number
+    mobile = str(mobile).replace(" ", "").replace("-", "").replace("(", "").replace(")", "")
+    if len(mobile) == 10:
+        mobile = "91" + mobile
+    
+    message = f"Chords Music Academy\nReceipt: {receipt_no}\nStudent: {student_name}\nAmount: ₹{amount}\n{next_due_info}\nThank you!"
+    
+    params = {
+        "authorization": FAST2SMS_API_KEY,
+        "message": message,
+        "numbers": mobile,
+        "route": "q"
+    }
+    
+    try:
+        response = requests.get(url, params=params, timeout=10)
+        if response.status_code == 200:
+            result = response.json()
+            if result.get("return") is True:
+                return True, "SMS receipt sent successfully"
+            else:
+                return False, f"SMS API error: {result}"
+        else:
+            return False, f"SMS HTTP {response.status_code}: {response.text}"
+    except Exception as e:
+        return False, f"SMS error: {str(e)}"
+
 def send_whatsapp_payment_receipt(mobile, student_name, amount, receipt_no, plan, payment_date, next_due_info):
     """Send payment receipt using template 5171"""
     
-    # Test with your registered number first
-    if mobile != "917702031818":
-        return False, f"WhatsApp only works with registered number. Current: {mobile}"
+    # Clean mobile number
+    mobile_clean = str(mobile).replace(" ", "").replace("-", "").replace("(", "").replace(")", "")
+    if len(mobile_clean) == 10:
+        mobile_clean = "91" + mobile_clean
+    
+    # Use your registered WhatsApp number
+    if mobile_clean != "917981585309":
+        return False, f"WhatsApp only works with registered number. Current: {mobile_clean}"
     
     # Format payment date
     try:
@@ -83,15 +119,15 @@ def send_whatsapp_payment_receipt(mobile, student_name, amount, receipt_no, plan
     # Template 5171: student_name|amount|receipt_no|plan|payment_date|next_due_info
     variables_list = [student_name, str(amount), receipt_no, plan, payment_date_formatted, next_due_info]
     
-    return send_whatsapp("payment_receipt", mobile, variables_list)
+    return send_whatsapp("payment_receipt", mobile_clean, variables_list)
 
 def test_fast2sms():
     """Test Fast2SMS API"""
-    print("TESTING Fast2SMS API...")
+    print("TESTING Fast2SMS WhatsApp API...")
     
-    # Test payment receipt
+    # Test WhatsApp receipt with your registered number
     success, message = send_whatsapp_payment_receipt(
-        mobile="7702031818",
+        mobile="7981585309",
         student_name="Test Student",
         amount=1000,
         receipt_no="CMA00001",
@@ -100,7 +136,7 @@ def test_fast2sms():
         next_due_info="Next Due: 15-02-2024"
     )
     
-    print(f"Test Result: {success}")
+    print(f"WhatsApp Test Result: {success}")
     print(f"Message: {message}")
     return 200 if success else 400, message
 

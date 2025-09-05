@@ -4,7 +4,7 @@ from datetime import datetime, date
 import sqlite3
 from database import init_db, add_student, mark_attendance, get_all_students, get_dashboard_stats
 from mantra_simple import mantra_scanner as scanner
-from sms_email import send_whatsapp_reminder, send_payment_receipt_email, send_whatsapp_payment_receipt
+from sms_email import send_whatsapp_reminder, send_payment_receipt_email, send_whatsapp_payment_receipt, send_sms_receipt
 from style import apply_custom_css, get_instrument_emoji, display_header, display_metric_card, display_section_header
 # Security module removed
 import os
@@ -931,19 +931,35 @@ def payment_module():
                                 conn.close()
                                 
                                 next_due_info = f"Next Due: {next_payment_due.strftime('%d-%m-%Y')}" if next_payment_due else "🎉 Fully Paid - No Dues!"
-                                whatsapp_success, whatsapp_message = send_whatsapp_payment_receipt(
-                                    student['Mobile'], student['Full Name'],
-                                    amount, receipt_no, student['Class Plan'],
-                                    datetime.now().strftime('%Y-%m-%d'), next_due_info
-                                )
                                 
-                                if whatsapp_success:
-                                    st.success(f"✅ Payment ₹{amount} recorded & WhatsApp sent! Receipt: {receipt_no}")
-                                    st.info(f"Sent to: {student['Mobile']} | Amount: ₹{amount}")
+                                # Try WhatsApp first (only works with registered number)
+                                if student['Mobile'] in ['7981585309', '917981585309']:
+                                    whatsapp_success, whatsapp_message = send_whatsapp_payment_receipt(
+                                        student['Mobile'], student['Full Name'],
+                                        amount, receipt_no, student['Class Plan'],
+                                        datetime.now().strftime('%Y-%m-%d'), next_due_info
+                                    )
+                                    
+                                    if whatsapp_success:
+                                        st.success(f"✅ Payment ₹{amount} recorded & WhatsApp sent! Receipt: {receipt_no}")
+                                        st.info(f"Sent to: {student['Mobile']} | Amount: ₹{amount}")
+                                    else:
+                                        st.success(f"✅ Payment ₹{amount} recorded! Receipt: {receipt_no}")
+                                        st.error(f"❌ WhatsApp failed: {whatsapp_message}")
                                 else:
-                                    st.success(f"✅ Payment ₹{amount} recorded! Receipt: {receipt_no}")
-                                    st.error(f"❌ WhatsApp failed: {whatsapp_message}")
-                                    st.error(f"Mobile: {student['Mobile']} | Response: {whatsapp_message}")
+                                    # Fallback to SMS for other numbers
+                                    sms_success, sms_message = send_sms_receipt(
+                                        student['Mobile'], student['Full Name'],
+                                        amount, receipt_no, next_due_info
+                                    )
+                                    
+                                    if sms_success:
+                                        st.success(f"✅ Payment ₹{amount} recorded & SMS sent! Receipt: {receipt_no}")
+                                        st.info(f"SMS sent to: {student['Mobile']} | Amount: ₹{amount}")
+                                    else:
+                                        st.success(f"✅ Payment ₹{amount} recorded! Receipt: {receipt_no}")
+                                        st.error(f"❌ SMS failed: {sms_message}")
+                                st.rerun()
                             else:
                                 st.error("⚠️ Please enter payment amount")
     else:
