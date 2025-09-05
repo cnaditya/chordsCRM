@@ -933,11 +933,11 @@ def payment_module():
                                 # Calculate remaining balance after this payment
                                 remaining_balance = max(0, pending_amount - amount)
                                 
-                                # Format Var6 with balance info (single line)
+                                # Format Var6 with balance info (simple format)
                                 if remaining_balance > 0:
-                                    next_due_info = f"Balance Due: ₹{remaining_balance:,.0f} | Next Due: {next_payment_due.strftime('%d-%m-%Y')}"
+                                    next_due_info = f"Balance Due: ₹{remaining_balance:,.0f}, Next Due: {next_payment_due.strftime('%d-%m-%Y')}"
                                 else:
-                                    next_due_info = f"🎉 Fully Paid - No Dues! | Renewal Due: {next_payment_due.strftime('%d-%m-%Y')}"
+                                    next_due_info = f"🎉 Fully Paid - No Dues! Next Due: {next_payment_due.strftime('%d-%m-%Y')}"
                                 
                                 # Send WhatsApp receipt to student
                                 whatsapp_success, whatsapp_message = send_whatsapp_payment_receipt(
