@@ -834,15 +834,13 @@ def payment_module():
                             key=f"status_{student['Student ID']}"
                         )
                         
-                        # Payment dates based on status
-                        from datetime import timedelta
-                        
-                        # Get package renewal date from existing expiry date
+                        # Get package renewal date from existing expiry date (for both installment and fully paid)
                         try:
                             renewal_date = datetime.strptime(str(student['Expiry Date']).split(' ')[0], '%Y-%m-%d').date()
                         except:
                             renewal_date = (datetime.now() + timedelta(days=365)).date()
                         
+                        from datetime import timedelta
                         if payment_status == "Installment Payment":
                             # Next installment due date
                             default_next_due = datetime.now() + timedelta(days=30)
@@ -854,17 +852,13 @@ def payment_module():
                             )
                             
                             # Show package renewal date (read-only info)
-                            st.info(f"🔄 Package Renewal Date: {renewal_date.strftime('%d-%m-%Y')} (auto-calculated from package expiry)")
+                            st.info(f"🔄 Package Renewal: {renewal_date.strftime('%d-%m-%Y')} (from package expiry)")
                         else:
-                            # For fully paid students, only renewal date
-                            default_renewal = datetime.now() + timedelta(days=365)
-                            next_payment_due = st.date_input(
-                                "🔄 Renewal Date", 
-                                value=default_renewal.date(),
-                                help="When should this student renew their package?",
-                                key=f"next_due_{student['Student ID']}"
-                            )
-                            renewal_date = next_payment_due  # Same for fully paid
+                            # For fully paid students, use expiry date as renewal date
+                            st.info(f"🔄 Renewal Date: {renewal_date.strftime('%d-%m-%Y')} (from package expiry)")
+                            next_payment_due = renewal_date  # Use expiry date
+                        
+                        st.info("💡 To adjust renewal dates, edit student's start date in Student Management")
                         
                         # Payment notes
                         payment_notes = st.text_area(
@@ -917,7 +911,7 @@ def payment_module():
                                     student['Student ID'], student['Instrument'],
                                     str(student['Start Date']).split(' ')[0], str(student['Expiry Date']).split(' ')[0],
                                     payment_method, next_due_str, remaining_balance_email, payment_status, 
-                                    renewal_date.strftime('%Y-%m-%d') if payment_status == "Installment Payment" else None
+                                    renewal_date.strftime('%Y-%m-%d')  # Always pass renewal date from expiry
                                 )
                                 
                                 if email_success:
@@ -953,7 +947,7 @@ def payment_module():
                                 if remaining_balance > 0:
                                     next_due_info = f"Balance Due: ₹{remaining_balance:,.0f}, Next Due: {next_payment_due.strftime('%d-%m-%Y')}, Package Renewal: {renewal_date.strftime('%d-%m-%Y')}"
                                 else:
-                                    next_due_info = f"🎉 Fully Paid - No Dues! Renewal Date: {next_payment_due.strftime('%d-%m-%Y')}"
+                                    next_due_info = f"🎉 Fully Paid - No Dues! Renewal Date: {renewal_date.strftime('%d-%m-%Y')}"
                                 
                                 # Send WhatsApp receipt to student
                                 whatsapp_success, whatsapp_message = send_whatsapp_payment_receipt(

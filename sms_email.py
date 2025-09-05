@@ -177,13 +177,12 @@ def send_payment_receipt_email(student_email, student_name, amount, receipt_numb
     
     # Format next due info based on payment status
     if payment_status == "Fully Paid - No Dues":
-        next_due_info = f"🎉 FULLY PAID - NO DUES! Renewal Date: {format_date(next_due_date)}"
+        next_due_info = f"🎉 FULLY PAID - NO DUES! Renewal Date: {format_date(renewal_date)}"
     else:
         if remaining_balance > 0:
-            renewal_info = f", Package Renewal: {format_date(renewal_date)}" if renewal_date else ""
-            next_due_info = f"Balance Due: ₹{remaining_balance:,.0f}, Next Due: {format_date(next_due_date)}{renewal_info}"
+            next_due_info = f"Balance Due: ₹{remaining_balance:,.0f}, Next Due: {format_date(next_due_date)}, Package Renewal: {format_date(renewal_date)}"
         else:
-            next_due_info = f"Next Due Date: {format_date(next_due_date)}"
+            next_due_info = f"Next Due Date: {format_date(next_due_date)}, Package Renewal: {format_date(renewal_date)}"
     
     body = f"""Dear {student_name},
 
