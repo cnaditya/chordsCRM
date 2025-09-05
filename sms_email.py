@@ -148,7 +148,7 @@ def test_fast2sms():
     print(f"Message: {message}")
     return 200 if success else 400, message
 
-def send_payment_receipt_email(student_email, student_name, amount, receipt_number, plan, student_id=None, instrument=None, start_date=None, expiry_date=None, payment_method="Cash Payment", next_due_date=None):
+def send_payment_receipt_email(student_email, student_name, amount, receipt_number, plan, student_id=None, instrument=None, start_date=None, expiry_date=None, payment_method="Cash Payment", next_due_date=None, remaining_balance=0, payment_status="Installment Payment"):
     """Send payment receipt via Gmail SMTP"""
     sender_email = "chords.music.academy@gmail.com"
     sender_password = "xdiu rhua fhpc zwrk"
@@ -175,6 +175,15 @@ def send_payment_receipt_email(student_email, student_name, amount, receipt_numb
     expiry_date_formatted = format_date(expiry_date)
     payment_date_formatted = datetime.now().strftime('%d-%m-%Y')
     
+    # Format next due info based on payment status
+    if payment_status == "Fully Paid - No Dues":
+        next_due_info = f"🎉 FULLY PAID - NO DUES! Renewal Date: {format_date(next_due_date)}"
+    else:
+        if remaining_balance > 0:
+            next_due_info = f"Balance Due: ₹{remaining_balance:,.0f}, Next Due: {format_date(next_due_date)}"
+        else:
+            next_due_info = f"Next Due Date: {format_date(next_due_date)}"
+    
     body = f"""Dear {student_name},
 
 Thank you for your payment to Chords Music Academy. We have successfully received your fee. Please find your receipt details below:
@@ -189,15 +198,16 @@ Thank you for your payment to Chords Music Academy. We have successfully receive
 - Course/Instrument: {instrument or 'N/A'}
 - No. of Classes: {num_classes}
 - Class Type: Offline
-- 🗓️ Next Due Date: {format_date(next_due_date) if next_due_date else '🎉 NO DUES - FULLY PAID'}
+- 🗓️ {next_due_info}
 
 ---
 
 💰 Payment Summary
 
-- Total Fees Paid: ₹{amount}
+- Amount Paid: ₹{amount:,.0f}
 - Payment Date: {payment_date_formatted}
 - Payment Method: {payment_method}
+{f"- Remaining Balance: ₹{remaining_balance:,.0f}" if remaining_balance > 0 else "- Status: Fully Paid"}
 
 ---
 

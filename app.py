@@ -896,12 +896,15 @@ def payment_module():
                                 conn.commit()
                                 conn.close()
                                 
+                                # Calculate remaining balance after this payment
+                                remaining_balance_email = max(0, pending_amount - amount)
+                                
                                 email_success, email_message = send_payment_receipt_email(
                                     student_email, student['Full Name'], 
                                     amount, receipt_no, student['Class Plan'],
                                     student['Student ID'], student['Instrument'],
                                     str(student['Start Date']).split(' ')[0], str(student['Expiry Date']).split(' ')[0],
-                                    payment_method, next_due_str
+                                    payment_method, next_due_str, remaining_balance_email, payment_status
                                 )
                                 
                                 if email_success:
