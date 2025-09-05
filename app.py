@@ -939,10 +939,11 @@ def payment_module():
                                 
                                 if whatsapp_success:
                                     st.success(f"✅ Payment ₹{amount} recorded & WhatsApp sent! Receipt: {receipt_no}")
+                                    st.info(f"Sent to: {student['Mobile']} | Amount: ₹{amount}")
                                 else:
                                     st.success(f"✅ Payment ₹{amount} recorded! Receipt: {receipt_no}")
                                     st.error(f"❌ WhatsApp failed: {whatsapp_message}")
-                                    st.error(f"DEBUG: Mobile: {student['Mobile']}, API Response: {whatsapp_message}")
+                                    st.error(f"Mobile: {student['Mobile']} | Response: {whatsapp_message}")
                                 st.rerun()
                             else:
                                 st.error("⚠️ Please enter payment amount")
