@@ -1272,13 +1272,6 @@ def student_list_module():
                 
                 with ecol1:
                     new_name = st.text_input("Full Name", value=student['Full Name'], key=f"name_{student['Student ID']}")
-                    try:
-                        age_value = int(student['Age']) if student['Age'] is not None else 18
-                    except (ValueError, TypeError):
-                        age_value = 18
-                    new_age = st.number_input("Age", value=age_value, min_value=1, max_value=100, key=f"age_{student['Student ID']}")
-                    new_mobile = st.text_input("Mobile", value=student['Mobile'], key=f"mobile_{student['Student ID']}")
-                    new_email = st.text_input("Email", value=student.get('Email', ''), key=f"email_{student['Student ID']}")
                     
                     # Date of birth
                     try:
@@ -1293,9 +1286,17 @@ def student_list_module():
                         key=f"dob_{student['Student ID']}"
                     )
                     
+                    # Auto-calculate age from DOB
+                    today = datetime.now().date()
+                    calculated_age = today.year - new_dob.year - ((today.month, today.day) < (new_dob.month, new_dob.day))
+                    st.text_input("Age (Auto-calculated)", value=str(calculated_age), disabled=True, key=f"age_display_{student['Student ID']}")
+                    
                     # Warning for future dates
                     if new_dob > datetime.now().date():
                         st.warning(f"⚠️ Future birth date selected: {new_dob.strftime('%d-%m-%Y')}")
+                    
+                    new_mobile = st.text_input("Mobile", value=student['Mobile'], key=f"mobile_{student['Student ID']}")
+                    new_email = st.text_input("Email", value=student.get('Email', ''), key=f"email_{student['Student ID']}")
                     
                     # Sex/Gender
                     sex_options = ["Male", "Female", "Other"]
@@ -1357,12 +1358,16 @@ def student_list_module():
                         else:
                             expiry_str = new_start_date.strftime('%Y-%m-%d')
                         
+                        # Calculate age from DOB for database
+                        today = datetime.now().date()
+                        calculated_age = today.year - new_dob.year - ((today.month, today.day) < (new_dob.month, new_dob.day))
+                        
                         cursor.execute('''
                             UPDATE students SET 
                                 full_name = ?, age = ?, mobile = ?, email = ?, date_of_birth = ?, sex = ?,
                                 instrument = ?, class_plan = ?, start_date = ?, expiry_date = ?
                             WHERE student_id = ?
-                        ''', (new_name, new_age, new_mobile, new_email, new_dob.strftime('%Y-%m-%d'), new_sex,
+                        ''', (new_name, calculated_age, new_mobile, new_email, new_dob.strftime('%Y-%m-%d'), new_sex,
                              new_instrument, new_package, new_start_date.strftime('%Y-%m-%d'), expiry_str, student['Student ID']))
                         
                         conn.commit()
