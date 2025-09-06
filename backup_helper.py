@@ -31,12 +31,7 @@ def create_backup_page():
         if st.button("📥 Download Students CSV"):
             conn = sqlite3.connect('chords_crm.db')
             
-            # Debug: Show actual table structure
-            df_debug = pd.read_sql_query("SELECT * FROM students LIMIT 2", conn)
-            st.write("Debug - Actual columns:", df_debug.columns.tolist())
-            st.write("Debug - Sample data:")
-            st.dataframe(df_debug)
-            
+            # Correct column order: id, student_id, full_name, age, mobile, email, date_of_birth, sex, instrument, class_plan, total_classes, start_date, expiry_date, status, classes_completed, extra_classes, first_class_date, created_at, updated_at
             df = pd.read_sql_query("""
                 SELECT full_name, age, mobile, email, date_of_birth, sex, instrument, class_plan, start_date 
                 FROM students 
