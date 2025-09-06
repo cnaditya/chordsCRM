@@ -14,7 +14,7 @@ def send_whatsapp(template, mobile, variables_list):
     template_map = {
         "fee_reminder": "5170",
         "payment_receipt": "5171",
-        "installment_reminder": "5197"
+        "installment_reminder": "5209"
     }
 
     message_id = template_map.get(template)
@@ -74,7 +74,7 @@ def send_whatsapp_reminder(mobile, student_name, plan, expiry_date, include_qr=F
     return send_whatsapp("fee_reminder", mobile, variables_list)
 
 def send_whatsapp_installment_reminder(mobile, student_name, pending_amount, due_date, plan, package_end_date):
-    """Send installment reminder using template 5197 - 5 variables: Var1|Var2|Var3|Var4|Var5"""
+    """Send installment reminder using template 5209 - matches new format with bank details"""
     
     # Format dates to dd-mm-yyyy
     try:
@@ -87,7 +87,7 @@ def send_whatsapp_installment_reminder(mobile, student_name, pending_amount, due
     except:
         end_date_formatted = str(package_end_date)
     
-    # Template 5197: Var1=student_name|Var2=pending_amount|Var3=due_date|Var4=plan|Var5=package_end_date
+    # New Template 5197: Student Name|Pending Amount|Due Date|Package Plan|Package End Date
     variables_list = [student_name, str(pending_amount), due_date_formatted, plan, end_date_formatted]
     
     return send_whatsapp("installment_reminder", mobile, variables_list)
