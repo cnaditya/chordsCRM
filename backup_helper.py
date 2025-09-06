@@ -113,18 +113,36 @@ def create_backup_page():
                 df = pd.read_csv(uploaded_file)
                 # Fill NaN values with empty strings
                 df = df.fillna('')
+                
+                # Remove empty rows (where name is empty)
+                df = df[df['full_name'].str.strip() != '']
+                
                 st.write(f"📊 Found {len(df)} students in uploaded file")
+                if len(df) == 0:
+                    st.error("No valid students found in file. Make sure 'full_name' column has data.")
+                    return
+                    
                 st.dataframe(df)
                 
                 if st.button("✅ Upload Students", type="primary"):
-                    conn = sqlite3.connect('chords_crm.db')
-                    cursor = conn.cursor()
-                    
                     success_count = 0
                     error_count = 0
                     
+                    # Check for existing students to prevent duplicates
+                    conn = sqlite3.connect('chords_crm.db')
+                    cursor = conn.cursor()
+                    
                     for _, row in df.iterrows():
                         try:
+                            # Check if student already exists (by name and mobile)
+                            cursor.execute('SELECT student_id FROM students WHERE full_name = ? AND mobile = ?', 
+                                         (str(row['full_name']).strip(), str(row['mobile']).strip()))
+                            existing = cursor.fetchone()
+                            
+                            if existing:
+                                st.warning(f"⚠️ Student {row['full_name']} already exists, skipping...")
+                                continue
+                            
                             # Generate student ID
                             student_id = f"CMA{datetime.now().strftime('%Y%m%d%H%M%S')}{success_count:03d}"
                             
