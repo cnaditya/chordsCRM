@@ -111,8 +111,10 @@ def create_backup_page():
         if uploaded_file is not None:
             try:
                 df = pd.read_csv(uploaded_file)
-                st.write(f"📊 Found {len(df)} students in file")
-                st.dataframe(df.head())
+                # Fill NaN values with empty strings
+                df = df.fillna('')
+                st.write(f"📊 Found {len(df)} students in uploaded file")
+                st.dataframe(df)
                 
                 if st.button("✅ Upload Students", type="primary"):
                     conn = sqlite3.connect('chords_crm.db')
@@ -126,31 +128,37 @@ def create_backup_page():
                             # Generate student ID
                             student_id = f"CMA{datetime.now().strftime('%Y%m%d%H%M%S')}{success_count:03d}"
                             
-                            # Parse start date with multiple formats
-                            start_date_str = str(row['start_date']).strip()
-                            try:
-                                start_date = datetime.strptime(start_date_str, '%Y-%m-%d')
-                            except:
+                            # Handle empty/NaN values
+                            start_date_str = str(row['start_date']).strip() if row['start_date'] else ''
+                            if not start_date_str or start_date_str == 'nan':
+                                start_date = datetime.now()
+                            else:
                                 try:
-                                    start_date = datetime.strptime(start_date_str, '%d-%m-%Y')
+                                    start_date = datetime.strptime(start_date_str, '%Y-%m-%d')
                                 except:
                                     try:
-                                        start_date = datetime.strptime(start_date_str, '%m/%d/%Y')
+                                        start_date = datetime.strptime(start_date_str, '%d-%m-%Y')
                                     except:
-                                        start_date = datetime.now()  # Default to today
+                                        try:
+                                            start_date = datetime.strptime(start_date_str, '%m/%d/%Y')
+                                        except:
+                                            start_date = datetime.now()
                             
                             # Parse date of birth with multiple formats
-                            dob_str = str(row['date_of_birth']).strip()
-                            try:
-                                dob_parsed = datetime.strptime(dob_str, '%Y-%m-%d').strftime('%Y-%m-%d')
-                            except:
+                            dob_str = str(row['date_of_birth']).strip() if row['date_of_birth'] else ''
+                            if not dob_str or dob_str == 'nan':
+                                dob_parsed = '2000-01-01'
+                            else:
                                 try:
-                                    dob_parsed = datetime.strptime(dob_str, '%d-%m-%Y').strftime('%Y-%m-%d')
+                                    dob_parsed = datetime.strptime(dob_str, '%Y-%m-%d').strftime('%Y-%m-%d')
                                 except:
                                     try:
-                                        dob_parsed = datetime.strptime(dob_str, '%m/%d/%Y').strftime('%Y-%m-%d')
+                                        dob_parsed = datetime.strptime(dob_str, '%d-%m-%Y').strftime('%Y-%m-%d')
                                     except:
-                                        dob_parsed = '2000-01-01'  # Default DOB
+                                        try:
+                                            dob_parsed = datetime.strptime(dob_str, '%d/%m/%y').strftime('%Y-%m-%d')
+                                        except:
+                                            dob_parsed = '2000-01-01'
                             
                             # Calculate expiry date
                             package_days = {
@@ -162,8 +170,17 @@ def create_backup_page():
                             expiry_date = start_date + timedelta(days=days)
                             
                             # Get total classes from plan
-                            plan_str = str(row['class_plan']).strip()
+                            plan_str = str(row['class_plan']).strip() if row['class_plan'] else 'No Package'
+                            if plan_str == 'nan' or not plan_str:
+                                plan_str = 'No Package'
                             total_classes = int(plan_str.split(' - ')[1]) if ' - ' in plan_str else 0
+                            
+                            # Handle age conversion safely
+                            age_val = row['age'] if row['age'] and str(row['age']) != 'nan' else 18
+                            try:
+                                age_int = int(float(str(age_val)))
+                            except:
+                                age_int = 18
                             
                             cursor.execute('''
                                 INSERT INTO students 
@@ -171,10 +188,15 @@ def create_backup_page():
                                  instrument, class_plan, total_classes, start_date, expiry_date)
                                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                             ''', (
-                                student_id, str(row['full_name']).strip(), int(float(str(row['age']))), 
-                                str(row['mobile']).strip(), str(row['email']).strip(), dob_parsed, 
-                                str(row['sex']).strip(), str(row['instrument']).strip(), 
-                                str(row['class_plan']).strip(), total_classes,
+                                student_id, 
+                                str(row['full_name']).strip() if row['full_name'] else 'Unknown', 
+                                age_int,
+                                str(row['mobile']).strip() if row['mobile'] else '', 
+                                str(row['email']).strip() if row['email'] else '', 
+                                dob_parsed, 
+                                str(row['sex']).strip() if row['sex'] else 'Male', 
+                                str(row['instrument']).strip() if row['instrument'] else 'Piano', 
+                                plan_str, total_classes,
                                 start_date.strftime('%Y-%m-%d'), expiry_date.strftime('%Y-%m-%d')
                             ))
                             success_count += 1
