@@ -30,7 +30,7 @@ def create_backup_page():
         
         if st.button("📥 Download Students CSV"):
             conn = sqlite3.connect('chords_crm.db')
-            df = pd.read_sql_query("SELECT * FROM students", conn)
+            df = pd.read_sql_query("SELECT full_name, age, mobile, email, date_of_birth, sex, instrument, class_plan, start_date FROM students", conn)
             conn.close()
             
             csv = df.to_csv(index=False)
@@ -63,7 +63,7 @@ def create_backup_page():
     with col1:
         st.markdown("**📋 Download Template**")
         if st.button("📥 Download Student Template CSV"):
-            # Create template with required columns
+            # Create template with same columns as download
             template_data = {
                 'full_name': ['John Doe', 'Jane Smith'],
                 'age': [25, 22],
@@ -84,7 +84,7 @@ def create_backup_page():
                 mime="text/csv"
             )
         
-        st.info("💡 Fill the template with student data and upload below")
+        st.info("💡 Same format as downloaded data - edit and re-upload easily!")
     
     with col2:
         st.markdown("**📤 Upload Students**")
