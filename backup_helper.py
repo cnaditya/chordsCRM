@@ -4,6 +4,7 @@ import pandas as pd
 from datetime import datetime, timedelta
 
 def create_backup_page():
+    import streamlit as st
     """Create a backup/export page for database"""
     st.header("🔄 Database Backup & Export")
     
@@ -192,6 +193,10 @@ def create_backup_page():
     """)
     
     if st.button("🔄 Refresh Database Stats"):
+        st.rerun()
+    
+    if st.button("← Back to Dashboard"):
+        st.session_state.page = "dashboard"
         st.rerun()
 
 # Add this to your main app.py navigation
