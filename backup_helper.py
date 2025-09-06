@@ -30,7 +30,11 @@ def create_backup_page():
         
         if st.button("📥 Download Students CSV"):
             conn = sqlite3.connect('chords_crm.db')
-            df = pd.read_sql_query("SELECT full_name, age, mobile, email, date_of_birth, sex, instrument, class_plan, start_date FROM students", conn)
+            df = pd.read_sql_query("""
+                SELECT full_name, age, mobile, email, date_of_birth, sex, instrument, class_plan, start_date 
+                FROM students 
+                ORDER BY full_name
+            """, conn)
             conn.close()
             
             csv = df.to_csv(index=False)
@@ -40,6 +44,8 @@ def create_backup_page():
                 file_name=f"students_backup_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
                 mime="text/csv"
             )
+            
+
         
         if st.button("📥 Download Payments CSV"):
             conn = sqlite3.connect('chords_crm.db')
