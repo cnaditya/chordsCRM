@@ -1282,10 +1282,16 @@ def student_list_module():
                     
                     # Date of birth
                     try:
-                        dob_value = pd.to_datetime(student.get('Date of Birth', '2000-01-01')).date()
+                        dob_value = pd.to_datetime(student.get('Date of Birth', '2010-01-01')).date()
                     except:
-                        dob_value = datetime(2000, 1, 1).date()
-                    new_dob = st.date_input("Date of Birth", value=dob_value, key=f"dob_{student['Student ID']}")
+                        dob_value = datetime(2010, 1, 1).date()
+                    new_dob = st.date_input(
+                        "Date of Birth", 
+                        value=dob_value, 
+                        min_value=datetime(1950, 1, 1).date(),
+                        max_value=datetime.now().date(),
+                        key=f"dob_{student['Student ID']}"
+                    )
                     
                     # Sex/Gender
                     sex_options = ["Male", "Female", "Other"]
