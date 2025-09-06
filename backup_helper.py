@@ -1,7 +1,7 @@
 import streamlit as st
 import sqlite3
 import pandas as pd
-from datetime import datetime
+from datetime import datetime, timedelta
 
 def create_backup_page():
     """Create a backup/export page for database"""
@@ -52,6 +52,102 @@ def create_backup_page():
                 file_name=f"payments_backup_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
                 mime="text/csv"
             )
+    
+    st.divider()
+    
+    st.subheader("📤 Bulk Upload Students")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.markdown("**📋 Download Template**")
+        if st.button("📥 Download Student Template CSV"):
+            # Create template with required columns
+            template_data = {
+                'full_name': ['John Doe', 'Jane Smith'],
+                'age': [25, 22],
+                'mobile': ['9876543210', '9876543211'],
+                'email': ['john@example.com', 'jane@example.com'],
+                'date_of_birth': ['1998-01-15', '2001-05-20'],
+                'sex': ['Male', 'Female'],
+                'instrument': ['Piano', 'Guitar'],
+                'class_plan': ['1 Month - 8', '3 Month - 24'],
+                'start_date': ['2024-01-01', '2024-01-01']
+            }
+            template_df = pd.DataFrame(template_data)
+            csv = template_df.to_csv(index=False)
+            st.download_button(
+                label="Download Template",
+                data=csv,
+                file_name="student_upload_template.csv",
+                mime="text/csv"
+            )
+        
+        st.info("💡 Fill the template with student data and upload below")
+    
+    with col2:
+        st.markdown("**📤 Upload Students**")
+        uploaded_file = st.file_uploader("Choose CSV file", type="csv")
+        
+        if uploaded_file is not None:
+            try:
+                df = pd.read_csv(uploaded_file)
+                st.write(f"📊 Found {len(df)} students in file")
+                st.dataframe(df.head())
+                
+                if st.button("✅ Upload Students", type="primary"):
+                    conn = sqlite3.connect('chords_crm.db')
+                    cursor = conn.cursor()
+                    
+                    success_count = 0
+                    error_count = 0
+                    
+                    for _, row in df.iterrows():
+                        try:
+                            # Generate student ID
+                            student_id = f"CMA{datetime.now().strftime('%Y%m%d%H%M%S')}{success_count:03d}"
+                            
+                            # Calculate expiry date
+                            start_date = datetime.strptime(str(row['start_date']), '%Y-%m-%d')
+                            package_days = {
+                                "1 Month - 8": 30, "3 Month - 24": 90, 
+                                "6 Month - 48": 180, "12 Month - 96": 365,
+                                "No Package": 0
+                            }
+                            days = package_days.get(row['class_plan'], 30)
+                            expiry_date = start_date + timedelta(days=days)
+                            
+                            # Get total classes from plan
+                            total_classes = int(row['class_plan'].split(' - ')[1]) if ' - ' in str(row['class_plan']) else 0
+                            
+                            cursor.execute('''
+                                INSERT INTO students 
+                                (student_id, full_name, age, mobile, email, date_of_birth, sex, 
+                                 instrument, class_plan, total_classes, start_date, expiry_date)
+                                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                            ''', (
+                                student_id, row['full_name'], row['age'], row['mobile'], 
+                                row['email'], row['date_of_birth'], row['sex'],
+                                row['instrument'], row['class_plan'], total_classes,
+                                row['start_date'], expiry_date.strftime('%Y-%m-%d')
+                            ))
+                            success_count += 1
+                        except Exception as e:
+                            error_count += 1
+                            st.error(f"Error adding {row.get('full_name', 'Unknown')}: {str(e)}")
+                    
+                    conn.commit()
+                    conn.close()
+                    
+                    if success_count > 0:
+                        st.success(f"✅ Successfully added {success_count} students!")
+                    if error_count > 0:
+                        st.warning(f"⚠️ {error_count} students failed to upload")
+                    
+                    st.rerun()
+            
+            except Exception as e:
+                st.error(f"Error reading file: {str(e)}")
     
     st.divider()
     
