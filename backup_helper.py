@@ -31,21 +31,19 @@ def create_backup_page():
         if st.button("📥 Download Students CSV"):
             conn = sqlite3.connect('chords_crm.db')
             
-            # Based on your output: Aditya Palagummi, [empty], 9701802225, Guitar, 3 Month - 24, 24, 24/06/25, 22/09/25, 0
-            # This means: full_name=correct, age=empty, mobile=correct, email=Guitar(?), date_of_birth=3 Month - 24(?)
-            # The data seems to be stored in wrong columns in the database itself
-            # Let me map it correctly:
+            # Your data shows: name, age, mobile, instrument(in email col), plan(in dob col), classes(in sex col), expiry(in instrument col), start(in plan col), completed(in start col)
+            # So the actual mapping is:
             df = pd.read_sql_query("""
                 SELECT 
                     full_name,
                     COALESCE(age, '') as age,
                     mobile,
-                    COALESCE(email, '') as email,
-                    COALESCE(date_of_birth, '') as date_of_birth,
-                    COALESCE(sex, '') as sex,
-                    instrument,
-                    class_plan,
-                    start_date
+                    '' as email,
+                    '' as date_of_birth,
+                    '' as sex,
+                    COALESCE(email, '') as instrument,
+                    COALESCE(date_of_birth, '') as class_plan,
+                    COALESCE(instrument, '') as start_date
                 FROM students 
                 ORDER BY full_name
             """, conn)
