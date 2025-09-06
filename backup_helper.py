@@ -14,7 +14,7 @@ def create_backup_page():
         conn = sqlite3.connect('chords_crm.db')
         
         # Get counts
-        students_count = pd.read_sql_query("SELECT COUNT(*) as count FROM students_enhanced WHERE is_active = 1", conn).iloc[0]['count']
+        students_count = pd.read_sql_query("SELECT COUNT(*) as count FROM students", conn).iloc[0]['count']
         payments_count = pd.read_sql_query("SELECT COUNT(*) as count FROM payments", conn).iloc[0]['count']
         total_revenue = pd.read_sql_query("SELECT COALESCE(SUM(amount), 0) as total FROM payments", conn).iloc[0]['total']
         
@@ -29,7 +29,7 @@ def create_backup_page():
         
         if st.button("📥 Download Students CSV"):
             conn = sqlite3.connect('chords_crm.db')
-            df = pd.read_sql_query("SELECT * FROM students_enhanced WHERE is_active = 1", conn)
+            df = pd.read_sql_query("SELECT * FROM students", conn)
             conn.close()
             
             csv = df.to_csv(index=False)
