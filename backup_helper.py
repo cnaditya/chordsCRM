@@ -107,18 +107,44 @@ def create_backup_page():
                             # Generate student ID
                             student_id = f"CMA{datetime.now().strftime('%Y%m%d%H%M%S')}{success_count:03d}"
                             
+                            # Parse start date with multiple formats
+                            start_date_str = str(row['start_date']).strip()
+                            try:
+                                start_date = datetime.strptime(start_date_str, '%Y-%m-%d')
+                            except:
+                                try:
+                                    start_date = datetime.strptime(start_date_str, '%d-%m-%Y')
+                                except:
+                                    try:
+                                        start_date = datetime.strptime(start_date_str, '%m/%d/%Y')
+                                    except:
+                                        start_date = datetime.now()  # Default to today
+                            
+                            # Parse date of birth with multiple formats
+                            dob_str = str(row['date_of_birth']).strip()
+                            try:
+                                dob_parsed = datetime.strptime(dob_str, '%Y-%m-%d').strftime('%Y-%m-%d')
+                            except:
+                                try:
+                                    dob_parsed = datetime.strptime(dob_str, '%d-%m-%Y').strftime('%Y-%m-%d')
+                                except:
+                                    try:
+                                        dob_parsed = datetime.strptime(dob_str, '%m/%d/%Y').strftime('%Y-%m-%d')
+                                    except:
+                                        dob_parsed = '2000-01-01'  # Default DOB
+                            
                             # Calculate expiry date
-                            start_date = datetime.strptime(str(row['start_date']), '%Y-%m-%d')
                             package_days = {
                                 "1 Month - 8": 30, "3 Month - 24": 90, 
                                 "6 Month - 48": 180, "12 Month - 96": 365,
                                 "No Package": 0
                             }
-                            days = package_days.get(row['class_plan'], 30)
+                            days = package_days.get(str(row['class_plan']).strip(), 30)
                             expiry_date = start_date + timedelta(days=days)
                             
                             # Get total classes from plan
-                            total_classes = int(row['class_plan'].split(' - ')[1]) if ' - ' in str(row['class_plan']) else 0
+                            plan_str = str(row['class_plan']).strip()
+                            total_classes = int(plan_str.split(' - ')[1]) if ' - ' in plan_str else 0
                             
                             cursor.execute('''
                                 INSERT INTO students 
@@ -126,10 +152,11 @@ def create_backup_page():
                                  instrument, class_plan, total_classes, start_date, expiry_date)
                                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                             ''', (
-                                student_id, row['full_name'], row['age'], row['mobile'], 
-                                row['email'], row['date_of_birth'], row['sex'],
-                                row['instrument'], row['class_plan'], total_classes,
-                                row['start_date'], expiry_date.strftime('%Y-%m-%d')
+                                student_id, str(row['full_name']).strip(), int(float(str(row['age']))), 
+                                str(row['mobile']).strip(), str(row['email']).strip(), dob_parsed, 
+                                str(row['sex']).strip(), str(row['instrument']).strip(), 
+                                str(row['class_plan']).strip(), total_classes,
+                                start_date.strftime('%Y-%m-%d'), expiry_date.strftime('%Y-%m-%d')
                             ))
                             success_count += 1
                         except Exception as e:
