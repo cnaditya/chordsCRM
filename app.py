@@ -1289,9 +1289,13 @@ def student_list_module():
                         "Date of Birth", 
                         value=dob_value, 
                         min_value=datetime(1950, 1, 1).date(),
-                        max_value=datetime.now().date(),
+                        max_value=datetime(2050, 12, 31).date(),
                         key=f"dob_{student['Student ID']}"
                     )
+                    
+                    # Warning for future dates
+                    if new_dob > datetime.now().date():
+                        st.warning(f"⚠️ Future birth date selected: {new_dob.strftime('%d-%m-%Y')}")
                     
                     # Sex/Gender
                     sex_options = ["Male", "Female", "Other"]
@@ -1340,6 +1344,11 @@ def student_list_module():
                         cursor = conn.cursor()
                         
                         # Calculate expiry date
+                        # Validate future birth date before saving
+                        if new_dob > datetime.now().date():
+                            st.error("❌ Cannot save: Birth date cannot be in the future!")
+                            return
+                        
                         if new_package != "No Package":
                             from datetime import timedelta
                             package_days = {"1 Month - 8": 30, "3 Month - 24": 90, "6 Month - 48": 180, "12 Month - 96": 365}
