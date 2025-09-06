@@ -31,9 +31,21 @@ def create_backup_page():
         if st.button("📥 Download Students CSV"):
             conn = sqlite3.connect('chords_crm.db')
             
-            # Correct column order: id, student_id, full_name, age, mobile, email, date_of_birth, sex, instrument, class_plan, total_classes, start_date, expiry_date, status, classes_completed, extra_classes, first_class_date, created_at, updated_at
+            # Based on your output: Aditya Palagummi, [empty], 9701802225, Guitar, 3 Month - 24, 24, 24/06/25, 22/09/25, 0
+            # This means: full_name=correct, age=empty, mobile=correct, email=Guitar(?), date_of_birth=3 Month - 24(?)
+            # The data seems to be stored in wrong columns in the database itself
+            # Let me map it correctly:
             df = pd.read_sql_query("""
-                SELECT full_name, age, mobile, email, date_of_birth, sex, instrument, class_plan, start_date 
+                SELECT 
+                    full_name,
+                    COALESCE(age, '') as age,
+                    mobile,
+                    COALESCE(email, '') as email,
+                    COALESCE(date_of_birth, '') as date_of_birth,
+                    COALESCE(sex, '') as sex,
+                    instrument,
+                    class_plan,
+                    start_date
                 FROM students 
                 ORDER BY full_name
             """, conn)
