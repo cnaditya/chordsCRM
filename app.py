@@ -6,6 +6,7 @@ from database import init_db, add_student, mark_attendance, get_all_students, ge
 from mantra_simple import mantra_scanner as scanner
 from sms_email import send_whatsapp_reminder, send_payment_receipt_email, send_whatsapp_payment_receipt, send_sms_receipt
 from style import apply_custom_css, get_instrument_emoji, display_header, display_metric_card, display_section_header
+from backup_helper import create_backup_page
 # Security module removed
 import os
 
@@ -300,6 +301,9 @@ def dashboard():
             st.rerun()
         if st.button("📊 Analytics & Reports", use_container_width=True):
             st.session_state.page = "reports"
+            st.rerun()
+        if st.button("💾 Database Backup", use_container_width=True):
+            st.session_state.page = "backup"
             st.rerun()
     
     # Alerts Section
@@ -1937,6 +1941,8 @@ def main():
             due_alerts_module()
         elif st.session_state.page == "student_list":
             student_list_module()
+        elif st.session_state.page == "backup":
+            create_backup_page()
         # Security page removed
 
 if __name__ == "__main__":
