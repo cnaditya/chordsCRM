@@ -81,17 +81,17 @@ def create_backup_page():
     with col1:
         st.markdown("**📋 Download Template**")
         if st.button("📥 Download Student Template CSV"):
-            # Create template with same columns as download
+            # Create template with dropdown options as examples
             template_data = {
-                'full_name': ['John Doe', 'Jane Smith'],
-                'age': [25, 22],
-                'mobile': ['9876543210', '9876543211'],
-                'email': ['john@example.com', 'jane@example.com'],
-                'date_of_birth': ['1998-01-15', '2001-05-20'],
-                'sex': ['Male', 'Female'],
-                'instrument': ['Piano', 'Guitar'],
-                'class_plan': ['1 Month - 8', '3 Month - 24'],
-                'start_date': ['2024-01-01', '2024-01-01']
+                'full_name': ['John Doe', 'Jane Smith', '# Enter student full name'],
+                'age': [25, 22, '# Auto-calculated from DOB'],
+                'mobile': ['9876543210', '9876543211', '# 10-digit mobile number'],
+                'email': ['john@example.com', 'jane@example.com', '# Valid email address'],
+                'date_of_birth': ['1998-01-15', '2001-05-20', '# Format: YYYY-MM-DD or DD-MM-YYYY'],
+                'sex': ['Male', 'Female', '# Options: Male, Female, Other'],
+                'instrument': ['Piano', 'Guitar', '# Options: Piano, Guitar, Drums, Violin, Flute, Keyboard, Carnatic Vocals, Hindustani Vocals, Western Vocals'],
+                'class_plan': ['1 Month - 8', '3 Month - 24', '# Options: No Package, 1 Month - 8, 3 Month - 24, 6 Month - 48, 12 Month - 96'],
+                'start_date': ['2024-01-01', '2024-01-01', '# Format: YYYY-MM-DD or DD-MM-YYYY']
             }
             template_df = pd.DataFrame(template_data)
             csv = template_df.to_csv(index=False)
@@ -102,7 +102,30 @@ def create_backup_page():
                 mime="text/csv"
             )
         
-        st.info("💡 Same format as downloaded data - edit and re-upload easily!")
+        st.info("💡 Template includes dropdown options as examples. Delete example rows before uploading!")
+        
+        # Show dropdown options
+        with st.expander("📝 View All Dropdown Options"):
+            st.markdown("""
+            **Instrument Options:**
+            - Piano, Guitar, Drums, Violin, Flute, Keyboard
+            - Carnatic Vocals, Hindustani Vocals, Western Vocals
+            
+            **Class Plan Options:**
+            - No Package
+            - 1 Month - 8
+            - 3 Month - 24  
+            - 6 Month - 48
+            - 12 Month - 96
+            
+            **Gender Options:**
+            - Male, Female, Other
+            
+            **Date Formats Accepted:**
+            - YYYY-MM-DD (2024-01-15)
+            - DD-MM-YYYY (15-01-2024)
+            - DD/MM/YY (15/01/24)
+            """)
     
     with col2:
         st.markdown("**📤 Upload Students**")
@@ -192,12 +215,23 @@ def create_backup_page():
                             days = package_days.get(str(row['class_plan']).strip(), 30)
                             expiry_date = start_date + timedelta(days=days)
                             
-                            # Get total classes from plan
+                            # Validate and clean class plan
                             plan_str = str(row['class_plan']).strip() if row['class_plan'] else 'No Package'
-                            if plan_str == 'nan' or not plan_str:
+                            if plan_str == 'nan' or not plan_str or plan_str.startswith('#'):
                                 plan_str = 'No Package'
+                            
+                            # Validate against allowed plans
+                            allowed_plans = ['No Package', '1 Month - 8', '3 Month - 24', '6 Month - 48', '12 Month - 96']
+                            if plan_str not in allowed_plans:
+                                st.warning(f"⚠️ Invalid plan '{plan_str}' for {row['full_name']}, using 'No Package'")
+                                plan_str = 'No Package'
+                            
                             total_classes = int(plan_str.split(' - ')[1]) if ' - ' in plan_str else 0
                             
+                            # Skip comment/example rows
+                            if str(row['full_name']).strip().startswith('#'):
+                                continue
+                                
                             # Handle age conversion safely
                             age_val = row['age'] if row['age'] and str(row['age']) != 'nan' else 18
                             try:
@@ -218,7 +252,7 @@ def create_backup_page():
                                 str(row['email']).strip() if row['email'] else '', 
                                 dob_parsed, 
                                 str(row['sex']).strip() if row['sex'] else 'Male', 
-                                str(row['instrument']).strip() if row['instrument'] else 'Piano', 
+                                str(row['instrument']).strip() if row['instrument'] and not str(row['instrument']).startswith('#') else 'Piano', 
                                 plan_str, total_classes,
                                 start_date.strftime('%Y-%m-%d'), expiry_date.strftime('%Y-%m-%d')
                             ))
