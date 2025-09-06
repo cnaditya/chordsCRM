@@ -134,9 +134,14 @@ def create_backup_page():
                     
                     for _, row in df.iterrows():
                         try:
+                            # Clean mobile number (remove decimal if present)
+                            mobile_clean = str(row['mobile']).strip()
+                            if '.' in mobile_clean:
+                                mobile_clean = str(int(float(mobile_clean)))
+                            
                             # Check if student already exists (by name and mobile)
                             cursor.execute('SELECT student_id FROM students WHERE full_name = ? AND mobile = ?', 
-                                         (str(row['full_name']).strip(), str(row['mobile']).strip()))
+                                         (str(row['full_name']).strip(), mobile_clean))
                             existing = cursor.fetchone()
                             
                             if existing:
@@ -209,7 +214,7 @@ def create_backup_page():
                                 student_id, 
                                 str(row['full_name']).strip() if row['full_name'] else 'Unknown', 
                                 age_int,
-                                str(row['mobile']).strip() if row['mobile'] else '', 
+                                mobile_clean, 
                                 str(row['email']).strip() if row['email'] else '', 
                                 dob_parsed, 
                                 str(row['sex']).strip() if row['sex'] else 'Male', 
