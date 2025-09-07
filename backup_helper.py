@@ -219,8 +219,10 @@ def create_backup_page():
                                 st.warning(f"⚠️ Student {row['full_name']} already exists, skipping...")
                                 continue
                             
-                            # Generate student ID
-                            student_id = f"CMA{datetime.now().strftime('%Y%m%d%H%M%S')}{success_count:03d}"
+                            # Generate student ID in CHORDS format
+                            cursor.execute('SELECT COUNT(*) FROM students')
+                            total_students = cursor.fetchone()[0]
+                            student_id = f"CHORDS{total_students + 1:03d}"
                             
                             # Handle start date with multiple formats
                             start_date_str = str(row['start_date']).strip() if row['start_date'] else ''
