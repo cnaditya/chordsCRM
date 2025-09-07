@@ -2,6 +2,9 @@ import streamlit as st
 import sqlite3
 import pandas as pd
 from datetime import datetime, timedelta
+import io
+from openpyxl import Workbook
+from openpyxl.worksheet.datavalidation import DataValidation
 
 def create_backup_page():
     import streamlit as st
@@ -80,29 +83,61 @@ def create_backup_page():
     
     with col1:
         st.markdown("**📋 Download Template**")
-        if st.button("📥 Download Student Template CSV"):
-            # Create template with dropdown options as examples
-            template_data = {
-                'full_name': ['John Doe', 'Jane Smith', '# Enter student full name'],
-                'age': [25, 22, '# Auto-calculated from DOB'],
-                'mobile': ['9876543210', '9876543211', '# 10-digit mobile number'],
-                'email': ['john@example.com', 'jane@example.com', '# Valid email address'],
-                'date_of_birth': ['1998-01-15', '2001-05-20', '# Format: YYYY-MM-DD or DD-MM-YYYY'],
-                'sex': ['Male', 'Female', '# Options: Male, Female, Other'],
-                'instrument': ['Piano', 'Guitar', '# Options: Piano, Guitar, Drums, Violin, Flute, Keyboard, Carnatic Vocals, Hindustani Vocals, Western Vocals'],
-                'class_plan': ['1 Month - 8', '3 Month - 24', '# Options: No Package, 1 Month - 8, 3 Month - 24, 6 Month - 48, 12 Month - 96'],
-                'start_date': ['2024-01-01', '2024-01-01', '# Format: YYYY-MM-DD or DD-MM-YYYY']
-            }
-            template_df = pd.DataFrame(template_data)
-            csv = template_df.to_csv(index=False)
+        if st.button("📥 Download Student Template Excel"):
+            # Create Excel with dropdowns
+            wb = Workbook()
+            ws = wb.active
+            ws.title = "Student Template"
+            
+            # Headers
+            headers = ['full_name', 'age', 'mobile', 'email', 'date_of_birth', 'sex', 'instrument', 'class_plan', 'start_date']
+            for col, header in enumerate(headers, 1):
+                ws.cell(row=1, column=col, value=header)
+            
+            # Add one sample row
+            ws.cell(row=2, column=1, value='John Doe')
+            ws.cell(row=2, column=2, value=25)
+            ws.cell(row=2, column=3, value='9876543210')
+            ws.cell(row=2, column=4, value='john@example.com')
+            ws.cell(row=2, column=5, value='1998-01-15')
+            ws.cell(row=2, column=6, value='Male')
+            ws.cell(row=2, column=7, value='Piano')
+            ws.cell(row=2, column=8, value='1 Month - 8')
+            ws.cell(row=2, column=9, value='2024-01-01')
+            
+            # Add filter options in hidden rows
+            filter_options = [
+                ['', '', '', '', '', 'Female', 'Guitar', '3 Month - 24', ''],
+                ['', '', '', '', '', 'Other', 'Drums', '6 Month - 48', ''],
+                ['', '', '', '', '', '', 'Violin', '12 Month - 96', ''],
+                ['', '', '', '', '', '', 'Flute', 'No Package', ''],
+                ['', '', '', '', '', '', 'Keyboard', '', ''],
+                ['', '', '', '', '', '', 'Carnatic Vocals', '', ''],
+                ['', '', '', '', '', '', 'Hindustani Vocals', '', ''],
+                ['', '', '', '', '', '', 'Western Vocals', '', '']
+            ]
+            
+            for i, row_data in enumerate(filter_options, 3):
+                for j, value in enumerate(row_data, 1):
+                    if value:
+                        ws.cell(row=i, column=j, value=value)
+            
+            # Enable AutoFilter
+            ws.auto_filter.ref = "A1:I10"
+            
+            # Save to bytes
+            excel_buffer = io.BytesIO()
+            wb.save(excel_buffer)
+            excel_buffer.seek(0)
+            
             st.download_button(
-                label="Download Template",
-                data=csv,
-                file_name="student_upload_template.csv",
-                mime="text/csv"
+                label="Download Excel Template",
+                data=excel_buffer.getvalue(),
+                file_name="student_upload_template.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
             )
         
-        st.info("💡 Template includes dropdown options as examples. Delete example rows before uploading!")
+        st.info("💡 Excel template has filter dropdowns! Click ▼ arrows in header to filter by Sex, Instrument, Class Plan.")
         
         # Show dropdown options
         with st.expander("📝 View All Dropdown Options"):
@@ -129,11 +164,15 @@ def create_backup_page():
     
     with col2:
         st.markdown("**📤 Upload Students**")
-        uploaded_file = st.file_uploader("Choose CSV file", type="csv")
+        uploaded_file = st.file_uploader("Choose file", type=["csv", "xlsx"])
         
         if uploaded_file is not None:
             try:
-                df = pd.read_csv(uploaded_file)
+                # Read Excel or CSV
+                if uploaded_file.name.endswith('.xlsx'):
+                    df = pd.read_excel(uploaded_file)
+                else:
+                    df = pd.read_csv(uploaded_file)
                 # Fill NaN values with empty strings
                 df = df.fillna('')
                 
