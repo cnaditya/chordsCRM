@@ -105,23 +105,34 @@ def create_backup_page():
             ws.cell(row=2, column=8, value='1 Month - 8')
             ws.cell(row=2, column=9, value='2024-01-01')
             
-            # Add data validation dropdowns for specific columns
-            # Sex dropdown (column F)
-            sex_validation = DataValidation(type="list", formula1='"Male,Female,Other"', showDropDown=True)
-            ws.add_data_validation(sex_validation)
+            # Create separate sheets for dropdown lists
+            sex_sheet = wb.create_sheet("SexOptions")
+            sex_sheet['A1'] = "Male"
+            sex_sheet['A2'] = "Female" 
+            sex_sheet['A3'] = "Other"
+            
+            instrument_sheet = wb.create_sheet("InstrumentOptions")
+            instruments = ["Piano", "Guitar", "Drums", "Violin", "Flute", "Keyboard", "Carnatic Vocals", "Hindustani Vocals", "Western Vocals"]
+            for i, inst in enumerate(instruments, 1):
+                instrument_sheet[f'A{i}'] = inst
+            
+            plan_sheet = wb.create_sheet("PlanOptions")
+            plans = ["No Package", "1 Month - 8", "3 Month - 24", "6 Month - 48", "12 Month - 96"]
+            for i, plan in enumerate(plans, 1):
+                plan_sheet[f'A{i}'] = plan
+            
+            # Add data validation using sheet references
+            sex_validation = DataValidation(type="list", formula1="SexOptions!$A$1:$A$3")
             sex_validation.add('F2:F1000')
+            ws.add_data_validation(sex_validation)
             
-            # Instrument dropdown (column G)
-            instruments = "Piano,Guitar,Drums,Violin,Flute,Keyboard,Carnatic Vocals,Hindustani Vocals,Western Vocals"
-            instrument_validation = DataValidation(type="list", formula1=f'"{instruments}"', showDropDown=True)
-            ws.add_data_validation(instrument_validation)
+            instrument_validation = DataValidation(type="list", formula1="InstrumentOptions!$A$1:$A$9")
             instrument_validation.add('G2:G1000')
+            ws.add_data_validation(instrument_validation)
             
-            # Class plan dropdown (column H)
-            plans = "No Package,1 Month - 8,3 Month - 24,6 Month - 48,12 Month - 96"
-            plan_validation = DataValidation(type="list", formula1=f'"{plans}"', showDropDown=True)
-            ws.add_data_validation(plan_validation)
+            plan_validation = DataValidation(type="list", formula1="PlanOptions!$A$1:$A$5")
             plan_validation.add('H2:H1000')
+            ws.add_data_validation(plan_validation)
             
             # Save to bytes
             excel_buffer = io.BytesIO()
@@ -135,7 +146,7 @@ def create_backup_page():
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
             )
         
-        st.info("💡 Excel template has dropdown lists in Sex, Instrument, and Class Plan columns. Click on cells to select values!")
+        st.info("💡 Excel template has dropdown lists in Sex, Instrument, and Class Plan columns. Click cells F2, G2, H2 to see dropdowns!")
         
         # Show dropdown options
         with st.expander("📝 View All Dropdown Options"):
