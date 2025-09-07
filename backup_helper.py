@@ -222,19 +222,26 @@ def create_backup_page():
                             # Generate student ID
                             student_id = f"CMA{datetime.now().strftime('%Y%m%d%H%M%S')}{success_count:03d}"
                             
-                            # Handle empty/NaN values
+                            # Handle start date with multiple formats
                             start_date_str = str(row['start_date']).strip() if row['start_date'] else ''
                             if not start_date_str or start_date_str == 'nan':
                                 start_date = datetime.now()
                             else:
+                                # Handle Excel datetime format
+                                if ' 00:00:00' in start_date_str:
+                                    start_date_str = start_date_str.split(' ')[0]
                                 try:
-                                    start_date = datetime.strptime(start_date_str, '%Y-%m-%d')
+                                    # Try ddmmyyyy format first
+                                    if len(start_date_str) == 8 and start_date_str.isdigit():
+                                        start_date = datetime.strptime(start_date_str, '%d%m%Y')
+                                    else:
+                                        start_date = datetime.strptime(start_date_str, '%Y-%m-%d')
                                 except:
                                     try:
                                         start_date = datetime.strptime(start_date_str, '%d-%m-%Y')
                                     except:
                                         try:
-                                            start_date = datetime.strptime(start_date_str, '%m/%d/%Y')
+                                            start_date = datetime.strptime(start_date_str, '%d/%m/%Y')
                                         except:
                                             start_date = datetime.now()
                             
@@ -243,14 +250,21 @@ def create_backup_page():
                             if not dob_str or dob_str == 'nan':
                                 dob_parsed = '2000-01-01'
                             else:
+                                # Handle Excel datetime format
+                                if ' 00:00:00' in dob_str:
+                                    dob_str = dob_str.split(' ')[0]
                                 try:
-                                    dob_parsed = datetime.strptime(dob_str, '%Y-%m-%d').strftime('%Y-%m-%d')
+                                    # Try ddmmyyyy format first
+                                    if len(dob_str) == 8 and dob_str.isdigit():
+                                        dob_parsed = datetime.strptime(dob_str, '%d%m%Y').strftime('%Y-%m-%d')
+                                    else:
+                                        dob_parsed = datetime.strptime(dob_str, '%Y-%m-%d').strftime('%Y-%m-%d')
                                 except:
                                     try:
                                         dob_parsed = datetime.strptime(dob_str, '%d-%m-%Y').strftime('%Y-%m-%d')
                                     except:
                                         try:
-                                            dob_parsed = datetime.strptime(dob_str, '%d/%m/%y').strftime('%Y-%m-%d')
+                                            dob_parsed = datetime.strptime(dob_str, '%d/%m/%Y').strftime('%Y-%m-%d')
                                         except:
                                             dob_parsed = '2000-01-01'
                             
