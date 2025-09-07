@@ -99,11 +99,11 @@ def create_backup_page():
             ws.cell(row=2, column=2, value=25)
             ws.cell(row=2, column=3, value='9876543210')
             ws.cell(row=2, column=4, value='john@example.com')
-            ws.cell(row=2, column=5, value="'15011998")
+            ws.cell(row=2, column=5, value='15/01/1998')
             ws.cell(row=2, column=6, value='Male')
             ws.cell(row=2, column=7, value='Piano')
             ws.cell(row=2, column=8, value='1 Month - 8')
-            ws.cell(row=2, column=9, value="'01012024")
+            ws.cell(row=2, column=9, value='01/01/2024')
             
             # Create separate sheets for dropdown lists
             sex_sheet = wb.create_sheet("SexOptions")
@@ -231,17 +231,18 @@ def create_backup_page():
                                 if ' 00:00:00' in start_date_str:
                                     start_date_str = start_date_str.split(' ')[0]
                                 try:
-                                    # Try ddmmyyyy format first
-                                    if len(start_date_str) == 8 and start_date_str.isdigit():
-                                        start_date = datetime.strptime(start_date_str, '%d%m%Y')
-                                    else:
-                                        start_date = datetime.strptime(start_date_str, '%Y-%m-%d')
+                                    # Try dd/mm/yyyy format first
+                                    start_date = datetime.strptime(start_date_str, '%d/%m/%Y')
                                 except:
                                     try:
-                                        start_date = datetime.strptime(start_date_str, '%d-%m-%Y')
+                                        # Try ddmmyyyy format
+                                        if len(start_date_str) == 8 and start_date_str.isdigit():
+                                            start_date = datetime.strptime(start_date_str, '%d%m%Y')
+                                        else:
+                                            start_date = datetime.strptime(start_date_str, '%Y-%m-%d')
                                     except:
                                         try:
-                                            start_date = datetime.strptime(start_date_str, '%d/%m/%Y')
+                                            start_date = datetime.strptime(start_date_str, '%d-%m-%Y')
                                         except:
                                             start_date = datetime.now()
                             
@@ -254,17 +255,18 @@ def create_backup_page():
                                 if ' 00:00:00' in dob_str:
                                     dob_str = dob_str.split(' ')[0]
                                 try:
-                                    # Try ddmmyyyy format first
-                                    if len(dob_str) == 8 and dob_str.isdigit():
-                                        dob_parsed = datetime.strptime(dob_str, '%d%m%Y').strftime('%Y-%m-%d')
-                                    else:
-                                        dob_parsed = datetime.strptime(dob_str, '%Y-%m-%d').strftime('%Y-%m-%d')
+                                    # Try dd/mm/yyyy format first
+                                    dob_parsed = datetime.strptime(dob_str, '%d/%m/%Y').strftime('%Y-%m-%d')
                                 except:
                                     try:
-                                        dob_parsed = datetime.strptime(dob_str, '%d-%m-%Y').strftime('%Y-%m-%d')
+                                        # Try ddmmyyyy format
+                                        if len(dob_str) == 8 and dob_str.isdigit():
+                                            dob_parsed = datetime.strptime(dob_str, '%d%m%Y').strftime('%Y-%m-%d')
+                                        else:
+                                            dob_parsed = datetime.strptime(dob_str, '%Y-%m-%d').strftime('%Y-%m-%d')
                                     except:
                                         try:
-                                            dob_parsed = datetime.strptime(dob_str, '%d/%m/%Y').strftime('%Y-%m-%d')
+                                            dob_parsed = datetime.strptime(dob_str, '%d-%m-%Y').strftime('%Y-%m-%d')
                                         except:
                                             dob_parsed = '2000-01-01'
                             
