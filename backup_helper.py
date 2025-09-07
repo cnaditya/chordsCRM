@@ -99,11 +99,11 @@ def create_backup_page():
             ws.cell(row=2, column=2, value=25)
             ws.cell(row=2, column=3, value='9876543210')
             ws.cell(row=2, column=4, value='john@example.com')
-            ws.cell(row=2, column=5, value='15011998')
+            ws.cell(row=2, column=5, value="'15011998")
             ws.cell(row=2, column=6, value='Male')
             ws.cell(row=2, column=7, value='Piano')
             ws.cell(row=2, column=8, value='1 Month - 8')
-            ws.cell(row=2, column=9, value='01012024')
+            ws.cell(row=2, column=9, value="'01012024")
             
             # Create separate sheets for dropdown lists
             sex_sheet = wb.create_sheet("SexOptions")
