@@ -94,16 +94,16 @@ def create_backup_page():
             for col, header in enumerate(headers, 1):
                 ws.cell(row=1, column=col, value=header)
             
-            # Add sample row
+            # Add sample row with ddmmyyyy format
             ws.cell(row=2, column=1, value='John Doe')
             ws.cell(row=2, column=2, value=25)
             ws.cell(row=2, column=3, value='9876543210')
             ws.cell(row=2, column=4, value='john@example.com')
-            ws.cell(row=2, column=5, value='1998-01-15')
+            ws.cell(row=2, column=5, value='15011998')
             ws.cell(row=2, column=6, value='Male')
             ws.cell(row=2, column=7, value='Piano')
             ws.cell(row=2, column=8, value='1 Month - 8')
-            ws.cell(row=2, column=9, value='2024-01-01')
+            ws.cell(row=2, column=9, value='01012024')
             
             # Create separate sheets for dropdown lists
             sex_sheet = wb.create_sheet("SexOptions")
